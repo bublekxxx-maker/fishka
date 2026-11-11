@@ -13,7 +13,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#F2EFF5" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1D1A23" media="(prefers-color-scheme: dark)">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -307,6 +306,10 @@ button,input{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .flash.cyan{background:radial-gradient(circle,rgba(62,110,142,0),rgba(62,110,142,.3));animation:fl .7s}
 @keyframes fl{30%{opacity:1}}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:35}
+.dossier{position:fixed;inset:0;background:var(--shade);display:none;align-items:center;justify-content:center;z-index:25;padding:20px}
+.dossier.on{display:flex;animation:fadein .2s}
+.dcard{width:100%;max-width:380px;background:var(--sheet);border-radius:24px;padding:20px;color:var(--ink);max-height:85dvh;overflow-y:auto}
+.ava{cursor:pointer}
 @media (max-height:720px){.rail{min-height:250px}.ava{width:46px;height:46px;font-size:15px}.act{height:50px}.mearea{margin-top:-40px}}
 </style>
 </head>
@@ -407,6 +410,7 @@ button,input{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
   <div id="sheetBody"></div>
   <button class="big-btn next" id="btnNext">Дальше</button>
 </div>
+<div class="dossier" id="dossier"><div class="dcard"><div id="dosBody"></div><button class="ghost-btn" id="dosClose" style="width:100%;margin-top:14px">Закрыть</button></div></div>
 <div class="flash" id="flash"></div>
 <canvas id="confetti"></canvas>
 <div class="toast" id="toast"></div>
@@ -710,7 +714,9 @@ function setBet(who, amt, label){
 function setPot(amt){ $('potChips').innerHTML=chipsHtml(amt,15); $('pot').textContent=`банк ${num(amt)} BB`; }
 function setOpp(who, pos, tag){
   const a=$('vAva'); a.textContent=who.ini||who.name.slice(0,2); a.classList.toggle('boss', !!who.boss);
-  $('vName').textContent=who.name; $('vTag').textContent=`${pos} · ${tag||who.tag}`;
+  $('vName').textContent=who.name;
+  const t = tag || (dossierOpen(who) ? who.tag : `${who.prof||'соперник'} · стиль: ?`);
+  $('vTag').textContent=`${pos} · ${t}`; state.curOpp=who;
 }
 
 // --- seats around the table: hero at the bottom, opponent at the top ---
@@ -774,13 +780,167 @@ function renderActions(main, sizes, hintFn, moreLabel){
 }
 function lockActions(){ document.querySelectorAll('#actions .act, #sizes .act').forEach(b=>b.disabled=true); $('hintbox').classList.remove('on'); }
 
+// ======================= OPPONENT GENERATOR =======================
+// Play style = two sliders (looseness L, aggression A) + 1–2 habits + noise.
+// Personality = name + occupation. Phrases = archetype voice + occupation flavour + habit lines.
+
+const ARCH = {
+  nit:    {t:'Нит',            L:[.08,.22], A:[.15,.35], d:'играет только сильные руки и почти не блефует'},
+  rock:   {t:'Осторожный',     L:[.28,.42], A:[.15,.35], d:'играет аккуратно, больше коллирует, чем ставит'},
+  tag:    {t:'Рег',            L:[.28,.42], A:[.6,.8],   d:'играет мало рук, но с ними давит ставками'},
+  lag:    {t:'Агрессор',       L:[.5,.65],  A:[.6,.8],   d:'играет много рук и часто ставит'},
+  fish:   {t:'Колл-станция',   L:[.65,.9],  A:[.08,.3],  d:'играет почти всё и платит до конца'},
+  maniac: {t:'Маньяк',         L:[.72,.95], A:[.78,.95], d:'ставит и рейзит всё подряд'},
+};
+const QUIRKS = {
+  river:  {t:'блефует на ривере', apply:b=>{ b.pp.rb=Math.min(.7,b.pp.rb+.3); }},
+  sticky: {t:'не выбрасывает пару', apply:b=>{ b.pp.base=Math.max(0,b.pp.base-.08); b.pp.slope=Math.max(.25,b.pp.slope-.12); }},
+  scared: {t:'боится больших ставок', apply:b=>{ b.pp.commit+=.18; }},
+  slow:   {t:'слоуплеит сильные руки', apply:b=>{ b.pp.vf=.45; b.pp.raiseT=Math.min(.98,b.pp.raiseT+.03); }},
+  tilt:   {t:'тильтует после проигрыша', apply:b=>{ b.tilt=true; }},
+  faces:  {t:'любит картинки и одномастные', apply:b=>{ b.pf.call+=.05; b.pf.open=b.pf.open.map(x=>x+.05); }},
+  bbdef:  {t:'всегда защищает большой блайнд', apply:b=>{ b.pf.bbx=.12; }},
+};
+const NAMES = [
+  ['Валера','m','mid'],['Жека','m','young'],['Серёга','m','mid'],['Димон','m','young'],['Костя','m','mid'],['Игорь Палыч','m','old'],['Виталик','m','young'],
+  ['Стас','m','mid'],['Гоша','m','young'],['Артур','m','mid'],['Рома','m','young'],['Михалыч','m','old'],['Олег','m','mid'],['Эдик','m','mid'],['Толик','m','old'],
+  ['Тамара Петровна','f','old'],['Света','f','mid'],['Катя','f','young'],['Лена','f','mid'],['Ника','f','young'],['Алина','f','young'],['Галина Ивановна','f','old'],
+  ['Ира','f','mid'],['Марго','f','mid'],['Даша','f','young'],['Вера Сергеевна','f','old'],['Жанна','f','mid'],['Оля','f','young'],
+];
+// occupation: labels, ages it fits, and its own lines (with {amt} for bet sizes)
+const JOBS = [
+  {id:'taxi', m:'таксист', f:'таксистка', ages:['mid','old'],
+   bet:['Ставлю {amt}, как за поездку в аэропорт','Погнали по выделенке: {amt}','Счётчик тикает: {amt}'], call:['Ладно, довезу до вскрытия','Плачу, сдачи не надо'], fold:['Пробка. Объезжаю','Не мой заказ'],
+   win:['Пятёрка мне в рейтинг','Чаевые засчитаны'], lose:['Опять в пробке встал','Это был не мой маршрут'], idle:['Время платного ожидания пошло','Ну что, едем?']},
+  {id:'acc', m:'бухгалтер', f:'бухгалтер', ages:['mid','old'],
+   bet:['Провожу {amt} по статье «блеф». Или нет','Дебет {amt}'], call:['Сходится. Колл','Внесу в отчёт: колл'], fold:['Не входит в бюджет квартала','Списываю в убытки'],
+   win:['Баланс сошёлся','Квартал закрыт в плюс'], lose:['Дебет с кредитом не бьётся','Где-то ошибка в проводках'], idle:['Пересчитываю…','Сальдо пока в твою пользу']},
+  {id:'it', m:'айтишник', f:'айтишница', ages:['young','mid'],
+   bet:['Деплою {amt} в прод','Пушу {amt} в мастер'], call:['Колл. Протестирую','Посмотрю логи. Колл'], fold:['Откатываюсь','Это баг, не фича. Пас'],
+   win:['Работает — не трогай','Тесты зелёные'], lose:['У меня локально работало','Это кейс, который не покрыт'], idle:['Компилируюсь','Жду ответа от сервера…']},
+  {id:'pens', m:'пенсионер', f:'пенсионерка', ages:['old'],
+   bet:['С пенсии отложу {amt}','{amt}. В наше время ставили больше'], call:['Колл. Мне торопиться некуда','Плачу. Я и не такое видел'], fold:['Пойду лучше на дачу','Пас. Давление'],
+   win:['Опыт не пропьёшь','Вот так-то, молодёжь'], lose:['Раньше карты честнее были','Сдают как попало'], idle:['Я подожду, у меня весь день свободен','Ходи уже, сериал начинается']},
+  {id:'stud', m:'студент', f:'студентка', ages:['young'],
+   bet:['Ставлю стипендию: {amt}','{amt}. Всё равно на доширак не хватает'], call:['Колл, сессия всё спишет','Плачу. Мама не узнает'], fold:['Пас, у меня зачёт завтра','Сброс. Лекцию проспал — и это просплю'],
+   win:['Автомат по покеру','Минус долг за общагу'], lose:['Пересдача','Препод валит'], idle:['Гуглю, что значит «банк»','Ща, только сторис досмотрю']},
+  {id:'barista', m:'бариста', f:'бариста', ages:['young','mid'],
+   bet:['{amt} с двойной обжаркой','Наливаю {amt} без сахара'], call:['Колл, как раз остынет','Ок, колл на альтернативном молоке'], fold:['Пас, это слишком горько','Сливаю, как неудачный эспрессо'],
+   win:['Пенка идеальная','Это моя фирменная подача'], lose:['Пережарил','Кофе сбежал'], idle:['Капучино сам себя не взобьёт','Жду, пока зерно раскроется']},
+  {id:'fit', m:'фитнес-тренер', f:'фитнес-тренер', ages:['young','mid'],
+   bet:['Добавляю веса: {amt}','{amt}, ещё подход!'], call:['Колл, через не могу','Терпим, колл'], fold:['Пас, это кардио не для меня','Отдых между подходами'],
+   win:['Вот это прогресс','Банк — как личный рекорд'], lose:['Мышцы забились','Пропустил день ног'], idle:['Пока думаешь — планка','Дыши. Решай.']},
+  {id:'plumb', m:'сантехник', f:'сантехник', ages:['mid','old'],
+   bet:['Тут надо {amt}, иначе потечёт','{amt} — и всё перекрыто'], call:['Колл. Посмотрим, где течёт','Плачу, но без гарантии'], fold:['Тут менять всё надо. Пас','Не моя труба'],
+   win:['Сухо и чисто','Работа принята'], lose:['Прорвало','Хозяин, у вас стояк гнилой'], idle:['Ищу ключ на двенадцать','Ну что там, течёт?']},
+  {id:'blog', m:'блогер', f:'блогерша', ages:['young','mid'],
+   bet:['{amt} — ставьте лайк, если поддерживаете','Ставлю {amt}, это пойдёт в рилс'], call:['Колл ради контента','Колл, подписчики требуют'], fold:['Пас, это не в тренде','Выйду в сторис, а не в банк'],
+   win:['Это залетит в реки','Камера, ты сняла?'], lose:['Это вырежем','Удалю сторис'], idle:['Сейчас, свет поправлю','Скажи что-нибудь для подписчиков']},
+  {id:'teach', m:'учитель', f:'учительница', ages:['mid','old'],
+   bet:['Ставлю {amt}. Записываем в тетрадь','{amt}, и не списывать'], call:['Колл. Отвечай у доски','Проверю, колл'], fold:['Пас. Садись, два','Сегодня без оценки'],
+   win:['Пять с плюсом','Вот как надо было решать'], lose:['Это не по программе','Родителей в школу'], idle:['Я жду ответ, звонок для учителя','Время контрольной идёт']},
+  {id:'sec', m:'охранник', f:'охранница', ages:['mid','old'],
+   bet:['Пропуск — {amt}','{amt}. Проход только по ставке'], call:['Колл. Покажите содержимое','Проверим. Колл'], fold:['Пас. Не положено','Сброс по инструкции'],
+   win:['Объект под контролем','Всё зафиксировано'], lose:['Проморгал','Камера не туда смотрела'], idle:['Смена длинная, я подожду','Не задерживаемся']},
+  {id:'chef', m:'повар', f:'повариха', ages:['mid','old'],
+   bet:['Добавляю {amt} для остроты','{amt} — и на медленный огонь'], call:['Колл, пусть потомится','Пробую. Колл'], fold:['Пересолено. Пас','Это блюдо не взлетит'],
+   win:['Шеф доволен','Подача на уровне'], lose:['Пригорело','Не досолил'], idle:['Тесто подходит, я подожду','Не торопи кухню']},
+];
+// archetype voice — sharper, never crude
+const VOICE = {
+  nit:    {bet:['Ставлю. Да, у меня есть','{amt}. Я просто так не ставлю'], raise:['Рейз. Ты знаешь, что это значит'], call:['Колл. Неохотно'], fold:['Пас. Подожду руку получше','Это не та рука'],
+           check:['Чек','Не тороплюсь'], shove:['Олл-ин. Тузы, если что'], win:['Терпение окупается'], lose:['Как с такими картами вообще проигрывают'], idle:['Я подожду','Ждать — моя работа']},
+  rock:   {bet:['Немного поставлю: {amt}'], raise:['Рейз… кажется'], call:['Колл, посмотрю','Ну ладно, плачу'], fold:['Нет, пожалуй, пас','Боязно. Пас'],
+           check:['Чек, без резких движений','Посмотрим'], shove:['Олл-ин. Ох…'], win:['Ого, получилось'], lose:['Так и знал'], idle:['Дай подумать','Сложно…']},
+  tag:    {bet:['{amt}. Стандарт','Ставка {amt}, без вариантов'], raise:['Рейз. Ты здесь слишком широко','Рейз до {amt}'], call:['Колл. Пока','Стандартный колл'], fold:['Сброс. Не мой спот','Пас, переплачивать не буду'],
+           check:['Чек','Контроль банка'], shove:['Олл-ин. Решай'], win:['Как по учебнику'], lose:['Кулер. Бывает'], idle:['Таймбанк тикает','Решение, пожалуйста']},
+  lag:    {bet:['{amt}, давай поиграем','Ставлю {amt}. Отвечать будешь?'], raise:['Рейз. Мне нравится этот банк','Поднимаю до {amt}'], call:['Колл, посмотрим тёрн','Плачу, интересно же'], fold:['Ладно, этот твой'],
+           check:['Чек. Пока'], shove:['Всё в центр, проверим нервы'], win:['Давление работает'], lose:['Красиво поймал'], idle:['Ну?','Не тяни']},
+  fish:   {bet:['Поставлю {amt}, вдруг повезёт'], raise:['Рейз! А что, можно же?'], call:['Колл, конечно','Плачу, мне интересно','Колл, я с этим и выигрывал'], fold:['Ну ладно, хотя хотелось'],
+           check:['Чек','Чек-чек'], shove:['Олл-ин! Чувствую удачу'], win:['Я же говорил, повезёт!','Вот это карта пришла'], lose:['Да ну, опять','Ривер издевается'], idle:['А что лучше, пара или две пары?','Я пока вообще не понял, но интересно']},
+  maniac: {bet:['{amt}! Погнали','На, держи {amt}','Ставка {amt}, страшно?'], raise:['Рейз! Ещё!','Поднимаю до {amt}, скучно же'], call:['Колл, но я ещё вернусь'], fold:['Пас. В первый и последний раз'],
+           check:['Чек… ловушка, кстати'], shove:['ОЛЛ-ИН. Без раздумий','Всё на кон, жизнь одна'], win:['Удача любит смелых','Учись, пока я добрый'], lose:['Рандом','Следующий мой, отвечаю'], idle:['Давай быстрее, адреналин падает','Решай, а то засну']},
+};
+const QUIRK_LINES = {
+  river:{riverBet:['На ривере я всегда честный. Почти','Ривер — моё время']},
+  tilt:{tiltLine:['Так, всё, теперь я злой','Мне надо отыграться']},
+  slow:{slowLine:['Чек… просто чек'],},
+};
+function rr(a,b){ return a+Math.random()*(b-a); }
+function initials(n){ const p=n.split(' '); return p.length>1 ? (p[0][0]+p[1][0]).toUpperCase() : n.slice(0,2); }
+function genitive(n){ // short soft genitive for common names ("у Валеры", "у Тамары Петровны")
+  return n.split(' ').map(w=>{ if (/ич$/.test(w)) return w+'а'; if (/[ая]$/.test(w)) return w.replace(/а$/,'ы').replace(/я$/,'и').replace(/([гкхжчшщ])ы$/,'$1и'); if (/[ьй]$/.test(w)) return w.slice(0,-1)+'я'; return w+'а'; }).join(' ');
+}
+
+function generateBot(){
+  const archKeys=Object.keys(ARCH), weights={nit:1.2,rock:1,tag:1.2,lag:1,fish:1.4,maniac:.8};
+  let x=Math.random()*archKeys.reduce((s,k)=>s+weights[k],0), ak=archKeys[0]; for (const k of archKeys){ x-=weights[k]; if (x<=0){ ak=k; break; } }
+  const a=ARCH[ak], L=rr(...a.L), A=rr(...a.A);
+  const [nm,sex,age]=pick(NAMES); const jobs=JOBS.filter(j=>j.ages.includes(age)); const job=pick(jobs.length?jobs:JOBS);
+  const prof = sex==='f' ? job.f : job.m;
+  const open = .10+.45*L, pos=[.7,.8,.95,1.2,1.3];
+  const b = {
+    generated:true, name:nm, short:nm.split(' ')[0], ini:initials(nm), gen:genitive(nm), arch:ak, L, A, job:job.id, prof,
+    base:.08+.45*L, shove:.1+.5*(L*.6+A*.4),
+    pf:{open:pos.map(p=>Math.min(.85,open*p)), call:.06+.4*L*(1-.4*A), tb:.02+.08*A*(.5+L), c3:.05+.3*L, cai:.04+.2*L},
+    pp:{val:.78-.2*A-.05*L, bluff:.02+.25*A, rb:.03+.27*A, base:Math.max(0,.6-.55*L), slope:.4+.5*(1-L), commit:.25-.15*L, raiseT:.95-.1*A, size:.45+.35*A, vf:.85},
+    quirks:[],
+  };
+  // 1–2 habits that make sense for the style
+  const qk=Object.keys(QUIRKS).filter(k=>!(k==='river'&&ak==='nit') && !(k==='slow'&&ak==='maniac'));
+  shuffle(qk); const nq = Math.random()<.45 ? 2 : 1;
+  for (let i=0;i<nq;i++){ b.quirks.push(qk[i]); QUIRKS[qk[i]].apply(b); }
+  // phrases: archetype voice + occupation flavour
+  const v=VOICE[ak];
+  const mix=(...xs)=>xs.filter(Boolean).flat();
+  b.bet=mix(v.bet, job.bet, b.quirks.includes('river')?[]:null); b.raise=mix(v.raise); b.call=mix(v.call, job.call); b.fold=mix(v.fold, job.fold);
+  b.check=mix(v.check, b.quirks.includes('slow')?QUIRK_LINES.slow.slowLine:null); b.shoveTalk=mix(v.shove); b.win=mix(v.win, job.win); b.lose=mix(v.lose, job.lose); b.idle=mix(v.idle, job.idle);
+  b.riverBet = b.quirks.includes('river') ? QUIRK_LINES.river.riverBet : null;
+  b.tiltLine = QUIRK_LINES.tilt.tiltLine;
+  b.tag = `${prof} · ${a.t.toLowerCase()}`;
+  b.styleText = a.d;
+  b.tip = tipShortOpen(b); b.tipShove = tipShortShove(b); b.tip2 = tipFull(b);
+  return b;
+}
+function tipShortOpen(b){ return b.base>.3 ? `${b.short} в BB коллирует широко — фолд-эквити мало, пушь руки посильнее, зато сильные пуши он оплатит.` : b.base<.15 ? `${b.short} в BB почти всё сбрасывает — против него пушить можно гораздо шире.` : `${b.short} коллирует пуши примерно по учебнику — ориентируйся на базовые чарты.`; }
+function tipShortShove(b){ return b.shove>.4 ? `${b.short} пушит широко — против него можно коллировать заметно шире обычного.` : b.shove<.2 ? `${b.short} пушит только сильные руки — для колла нужна рука ещё сильнее.` : `${b.short} пушит умеренно — решай по шансам банка.`; }
+function tipFull(b){
+  const t=[];
+  if (b.pp.base<.25) t.push(`${b.short} почти не сбрасывает — блефовать бесполезно, зато сильные руки ставь крупно.`);
+  else if (b.pp.base>.45) t.push(`${b.short} сбрасывает всё без сильной руки — давить ставками выгодно, а его ставки уважай.`);
+  if (b.pp.bluff>.18) t.push(`Он часто блефует — его ставки можно ловить шире.`);
+  if (b.quirks.includes('river')) t.push(`На ривере его ставки — часто блеф.`);
+  if (b.quirks.includes('slow')) t.push(`Осторожно с его чеками: сильные руки он разыгрывает тихо.`);
+  if (b.quirks.includes('scared')) t.push(`Большие ставки его пугают — крупный блеф работает чаще.`);
+  return t.length ? t.join(' ') : `${b.short} играет без явных перекосов — решай по шансам банка.`;
+}
+function tiltBot(b){ b.tilted=true; b.pf.open=b.pf.open.map(x=>Math.min(.9,x+.12)); b.pf.call+=.1; b.pp.bluff+=.12; b.pp.rb+=.1; b.pp.base=Math.max(0,b.pp.base-.08); b.tag=b.tag+' · на тильте'; }
+// legends still drop in now and then
+function randomOpponent(){ if (Math.random()<.12){ const l=JSON.parse(JSON.stringify(pick(BOTS))); l.legend=true; return l; } return generateBot(); }
+function fillT(line, amt){ return (line||'').replace('{amt}', `${num(amt)} BB`); }
+
+// ---------- dossier ----------
+function dossierOpen(b){ return LV[CFG.level].showEq || b.revealed || b.legend || b.boss; }
+function dossierHtml(b){
+  if (!dossierOpen(b)) return `<div class="lbl">Досье</div><div style="font-size:18px;font-weight:800;margin:6px 0 4px">${b.name}</div><div class="levdesc">${b.prof||b.tag}</div>
+    <div class="result" style="margin-top:12px">На уровне «Профи» стиль соперника нужно разгадать самому. Досье откроется после первой раздачи с ним — в разборе.</div>`;
+  const bars=(l,v)=>`<div style="display:flex;align-items:center;gap:10px;margin:6px 0"><span style="width:110px;font-size:12px;color:var(--mute)">${l}</span><div style="flex:1;height:6px;border-radius:3px;background:var(--soft)"><div style="width:${Math.round(v*100)}%;height:6px;border-radius:3px;background:var(--accent)"></div></div></div>`;
+  const L = b.L!=null ? b.L : clamp((b.base||.2)*1.8,0,1), A = b.A!=null ? b.A : clamp((b.pp?b.pp.bluff:.1)*3,0,1);
+  const q = (b.quirks||[]).map(k=>`<span class="perk">${QUIRKS[k].t}</span>`).join('');
+  return `<div class="lbl">Досье</div><div style="font-size:18px;font-weight:800;margin:6px 0 2px">${b.name}${b.tilted?' · на тильте':''}</div><div class="levdesc">${b.tag}</div>
+    <div style="margin-top:12px">${bars('Играет рук',L)}${bars('Агрессия',A)}</div>
+    ${b.styleText?`<p class="explain" style="margin-top:8px">Стиль: ${b.styleText}.</p>`:''}
+    ${q?`<div class="lbl" style="margin:10px 0 6px">Привычки</div><div class="perks">${q}</div>`:''}
+    <div class="result" style="margin-top:12px">${b.tip2||''}</div>`;
+}
+
 // ======================= MODE 1: SHORT STACK =======================
 const callPct = (base,E) => clamp(base*Math.pow(10/E,.55), .03, .9);
 const shovePct = (bot,V,posIdx,ante) => clamp(bot.shove*Math.pow(10/V,.6)*[.55,.7,.85,1.1,1.3,1.3][posIdx]*(ante?1:.85), .03, .95);
 const stackPick = () => pick([3,4,5,6,7,8,8,9,10,10,11,12,12,13,14,15,16,17,18,19,20]);
 
 function makeOpenSpot(ante){
-  const heroIdx=pick([0,1,2,2,3,3,3,4,4]), S=stackPick(), bot=pick(BOTS);
+  const heroIdx=pick([0,1,2,2,3,3,3,4,4]), S=stackPick(), bot=randomOpponent();
   const regs=shuffle(REGS.slice()), villains=[];
   for (let p=heroIdx+1;p<6;p++){ const isBB=p===5; villains.push({pos:POS[p], isBB, who:isBB?bot:regs[(p-heroIdx-1)%regs.length], stack:6+rand(40), vPosted:p===4?.5:(isBB?1:0)}); }
   const spot={type:'open', heroIdx, pos:POS[heroIdx], S, bot, heroPosted:heroIdx===4?.5:0, villains, ante};
@@ -798,7 +958,7 @@ function evOpen(spot, cls, ante){
 }
 function makeCallSpot(ante){
   const heroIdx=pick([5,5,5,4,4,3]); const idxs=[]; for (let i=0;i<heroIdx;i++) for (let k=0;k<=i;k++) idxs.push(i);
-  const vIdx=pick(idxs), bot=pick(BOTS), V=4+rand(22), S=stackPick();
+  const vIdx=pick(idxs), bot=randomOpponent(), V=4+rand(22), S=stackPick();
   const spot={type:'call', heroIdx, pos:POS[heroIdx], vIdx, vpos:POS[vIdx], S, V, bot, heroPosted:heroIdx===5?1:heroIdx===4?.5:0, vPosted:vIdx===4?.5:0, ante};
   spot.E=Math.min(S,V);
   spot.sets=[0,1].map(a=>topRange(shovePct(bot,V,vIdx,a)));
@@ -873,7 +1033,7 @@ async function shortHand(){
   for (let i=0;i<2;i++){ $('hCards').appendChild(cardEl(hc[i],true)); SFX.deal(); await sleep(120); vc.appendChild(cardEl(null,true)); await sleep(80); }
   await sleep(250);
   for (const el of $('hCards').children){ el.classList.remove('down'); SFX.flip(); await sleep(110); }
-  if (spot.type==='call'){ setBet('v', spot.V, 'олл-ин'); say(pick(b.shoveTalk), 2200); SFX.chips(); }
+  if (spot.type==='call'){ setBet('v', spot.V, 'олл-ин'); say(fillT(pick(b.shoveTalk),spot.V), 2200); SFX.chips(); }
   setHeroEq(eqLabel, ev.eq, lv.showEq);
   renderActions(btns, null, ()=>hintShort(spot,ev));
   setBusy(false);
@@ -923,7 +1083,7 @@ async function resolveOpen(spot, hc, action){
   renderSeatsShort(spot, caller.pos);
   if (!caller.isBB){ setOpp(caller.who, caller.pos, 'заколлил твой олл-ин'); setStack('v', caller.stack-caller.E); }
   else setStack('v', caller.stack-caller.E-(ante?1:0));
-  say(pick(caller.isBB?caller.who.call:['Колл.','Заколлю, пожалуй','Плачу']), 2200);
+  say(fillT(pick(caller.isBB?caller.who.call:['Колл.','Заколлю, пожалуй','Плачу']),caller.E), 2200);
   SFX.chips(); setBet('v', caller.E, 'колл');
   const pot=2*caller.E+dead-spot.heroPosted-caller.vPosted;
   await sleep(600); setBet('v',0); setBet('h',0); setPot(pot);
@@ -1066,11 +1226,11 @@ function callSetVsShove(bot, need){
 function pfRule(bot, ctx, c, botIdx, potOddsGood, depth){
   const P=PCT[c];
   if (ctx==='open') return P<botPf(bot,'open',botIdx) ? 'raise' : 'fold';
-  if (ctx==='vsOpen'){ const cl=bot.pf.call+(botIdx===5?.12:0); return P<bot.pf.tb?'raise':P<cl?'call':'fold'; }
+  if (ctx==='vsOpen'){ const cl=bot.pf.call+(botIdx===5?.12+(bot.pf.bbx||0):0); return P<bot.pf.tb?'raise':P<cl?'call':'fold'; }
   if (ctx==='vs3b') return P<.035 ? 'raise' : P<bot.pf.c3 ? 'call' : 'fold';
   return callSetVsShove(bot, PF_NEED)[c] ? 'call' : 'fold';
 }
-function polFirst(bot, s, street){ const p=bot.pp; if (s>p.val) return .85; if (s<.35) return street===3?p.rb:p.bluff; return .08; }
+function polFirst(bot, s, street){ const p=bot.pp; if (s>p.val) return p.vf||.85; if (s<.35) return street===3?p.rb:p.bluff; return .08; }
 function polFacing(bot, s, req, canRaise, commitFrac){
   const p=bot.pp, t=Math.min(p.base+p.slope*req+p.commit*(commitFrac||0), p.val+.05, .9), cont=1/(1+Math.exp(-(s-t)/.035));
   const r=(canRaise && s>p.raiseT) ? .65*cont : 0; return {f:1-cont, c:cont-r, r};
@@ -1134,7 +1294,7 @@ function normW(){ const u=validMask(); let s=0; const w=new Float64Array(1326);
 
 async function fullHand(opts={}){
   hideBanner(); logMsg('');
-  const bot=opts.bot||pick(BOTS); let heroIdx, botIdx;
+  const bot=opts.bot||randomOpponent(); let heroIdx, botIdx;
   if (Math.random()<.65){ botIdx=rand(5); heroIdx=botIdx+1+rand(5-botIdx); } else { heroIdx=rand(5); botIdx=heroIdx+1+rand(5-heroIdx); }
   const heroStart=opts.heroStack!=null?r1(opts.heroStack):25+rand(36), botStart=opts.botStack!=null?opts.botStack:25+rand(36);
   H={opts, bot, heroIdx, botIdx, heroPos:POS[heroIdx], botPos:POS[botIdx], heroStart, botStart, hs:heroStart, bs:botStart, hi:0, bi:0, pot:0, board:[], street:0, raises:0, decisions:[], heroIP:POST_ORDER(heroIdx)>POST_ORDER(botIdx)};
@@ -1247,10 +1407,10 @@ async function botAct(){
   const nm=bot.short;
   if (act==='fold'){ text=`${nm}: пас`; say(pick(bot.fold)); }
   else if (act==='check'){ text=`${nm}: чек`; SFX.check(); if (Math.random()<.4) say(pick(bot.check),1600); }
-  else if (act==='call'){ text=`${nm}: колл ${num(amt)} BB`; SFX.chips(); if (Math.random()<.5) say(pick(bot.call),1600); }
-  else if (act==='bet'){ text=`${nm}: ставка ${num(H.bi)} BB`; SFX.chips(); if (Math.random()<.6) say(pick(bot.bet),1600); }
-  else if (act==='raise'){ text=`${nm}: рейз до ${num(H.bi)} BB`; SFX.chips(); say(pick(bot.raise),1600); }
-  else if (act==='allin'){ text=`${nm}: ОЛЛ-ИН ${num(H.bi)} BB`; SFX.chips(); say(pick(bot.shoveTalk),1800); }
+  else if (act==='call'){ text=`${nm}: колл ${num(amt)} BB`; SFX.chips(); if (Math.random()<.5) say(fillT(pick(bot.call),amt),1800); }
+  else if (act==='bet'){ text=`${nm}: ставка ${num(H.bi)} BB`; SFX.chips(); if (Math.random()<.7) say(fillT(pick(H.street===3&&bot.riverBet&&Math.random()<.5?bot.riverBet:bot.bet),H.bi),1900); }
+  else if (act==='raise'){ text=`${nm}: рейз до ${num(H.bi)} BB`; SFX.chips(); say(fillT(pick(bot.raise),H.bi),1900); }
+  else if (act==='allin'){ text=`${nm}: олл-ин ${num(H.bi)} BB`; SFX.chips(); say(fillT(pick(bot.shoveTalk),H.bi),1900); }
   logMsg(text); fullRender();
   await sleep(450);
   return act==='fold' ? 'fold' : act;
@@ -1565,7 +1725,7 @@ function saveAquaBest(table, stack){ const b=aquaBest(); if (!b || table>b.table
 let RUN=null;
 function newRun(){
   const tables=[];
-  for (let d=0;d<3;d++){ for (let k=0;k<2;k++){ const b=JSON.parse(JSON.stringify(pick(BOTS))); tables.push({bot:b, boss:false, depth:d}); } tables.push({bot:bossOf(d), boss:true, depth:d}); }
+  for (let d=0;d<3;d++){ for (let k=0;k<2;k++){ tables.push({bot:randomOpponent(), boss:false, depth:d}); } tables.push({bot:bossOf(d), boss:true, depth:d}); }
   RUN={stack:30, table:0, tables, perks:{}, buoyUsed:false, aggroNext:false};
   state.results=[]; state.hintsLeft=LV[CFG.level].hints; state.running=true;
 }
@@ -1607,6 +1767,7 @@ async function runAqua(){
         if (RUN.perks.nose){ const good=rec.decisions.filter(d=>d.g==='best'||d.g==='brilliant').length, bad=rec.decisions.filter(d=>d.g==='blunder').length;
           const delta=good-2*bad; if (delta){ RUN.stack=r1(Math.max(0,RUN.stack+delta)); rec.bonus=delta; } }
         state.results.push(rec); tableRecs.push(rec);
+        if (bot.tilt && !bot.tilted && rec.bb>0 && h===0){ tiltBot(bot); setTimeout(()=>toast(`${bot.short} затильтовал — будет играть шире и злее`),400); }
         const r = await openReview(rec, 'Дальше');
         if (r==='__abort') throw ABORT;
         if (RUN.stack < 1){
@@ -1716,6 +1877,7 @@ async function runSeries(o){
   } catch(e){ unseed(); state.running=false; state.dotsLen=null; if (e!==ABORT){ console.error(e); toast('Ошибка: '+e.message); } return null; }
 }
 function openReview(rec, btnText, quiet){
+  { const ob = rec.mode==='short' ? rec.spot.bot : rec.bot; if (ob) ob.revealed=true; }
   if (rec.mode==='short'){
     const p=openSheet(reviewShortHtml(rec), btnText, root=>wireShortReview(root,rec));
     if (!quiet) gradeEffects(rec.g); return p;
@@ -1763,6 +1925,8 @@ $('btnAccept').onclick=()=>{ const d=decodeDuel($('duelCode').value); if (!d){ $
 $('duelCode').oninput=()=>{ $('duelErr').textContent=''; };
 $('btnHome').onclick=()=>{ if (state.busy) return; const p=state.pending, s=state.sheetResolve; state.pending=null; state.sheetResolve=null; $('sheet').classList.remove('on'); $('sheetBg').classList.remove('on'); unseed(); state.topText=null; state.running=false; RUN=null; show('start'); renderStart(); if (p) p('__abort'); if (s) s('__abort'); };
 $('btnNext').onclick=()=>closeSheet();
+$('vAva').onclick=()=>{ if (!state.curOpp) return; $('dosBody').innerHTML=dossierHtml(state.curOpp); $('dossier').classList.add('on'); };
+$('dossier').onclick=e=>{ if (e.target.id==='dossier' || e.target.id==='dosClose') $('dossier').classList.remove('on'); };
 $('sheetBg').onclick=()=>{ if (!state.sheetResolve || !state.running) closeSheet(); };
 $('btnMute').innerHTML=MUTE_SVG(SFX.muted);
 $('btnMute').onclick=()=>{ $('btnMute').innerHTML=MUTE_SVG(SFX.toggle()); };
