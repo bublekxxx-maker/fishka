@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Фишка — покерный тренажёр</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Фишка">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F2EFF5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1D1A23" media="(prefers-color-scheme: dark)">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root,[data-theme="light"]{
+  --bg:#F2EFF5; --surf:#FBFAFC; --felt:#DED6E8; --line:#C9BDDA; --ink:#2E2A38; --mute:#6F6780; --soft:#E8E3EE;
+  --accent:#7E6C9E; --onAccent:#FFFFFF; --blue:#9AAEC8; --onBlue:#1F2A3C; --card:#FFFFFF; --cardLine:#E2DCE9;
+  --red:#B65F6C; --black:#3A3545; --back:#B9AACF; --backLine:#FFFFFF; --sheet:#FFFFFF; --shade:rgba(46,42,56,.28);
+  --c1:#FFFFFF; --c1r:#CFC5DD; --c5:#C9B8E0; --c5r:#A895C6; --c25:#AFC1D9; --c25r:#8EA3C2; --c100:#5A5068; --c100r:#3F3750; --c05:#E8E3EE; --c05r:#C9BDDA;
+  --good:#5E9C7A; --bad:#B65F6C; --gridOff:#EFEBF3; --gridOn:#8FB8A0; --gridBot:#A894CC;
+}
+[data-theme="dark"]{
+  --bg:#1D1A23; --surf:#26222E; --felt:#302A3B; --line:#443B54; --ink:#ECE8F2; --mute:#A59DB3; --soft:#2F2A38;
+  --accent:#B3A2D4; --onAccent:#1D1A23; --blue:#8EA2BF; --onBlue:#141B27; --card:#EEEAF3; --cardLine:#D6CFE0;
+  --red:#B65F6C; --black:#3A3545; --back:#6B5D86; --backLine:#8A7BA6; --sheet:#26222E; --shade:rgba(0,0,0,.5);
+  --c1:#EEEAF3; --c1r:#BDB3CC; --c5:#B7A6D6; --c5r:#9584B8; --c25:#9DB1CD; --c25r:#7D93B3; --c100:#4A4258; --c100r:#6A5F80; --c05:#3A3446; --c05r:#56496A;
+  --good:#8FC4A6; --bad:#E0909A; --gridOff:#2F2A38; --gridOn:#5E8F74; --gridBot:#7E6BA6;
+}
+:root{ --cw:clamp(52px,15.5vw,66px); --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --brass2:var(--accent); --ivory:var(--ink); }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,sans-serif;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;transition:background .3s}
+button,input{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.app{position:relative;max-width:480px;height:100dvh;margin:0 auto;display:flex;flex-direction:column;padding:calc(var(--safe-t) + 10px) 14px calc(var(--safe-b) + 12px)}
+.screen{display:none;flex:1;flex-direction:column;min-height:0}
+.screen.on{display:flex}
+.lbl{font-size:11px;font-weight:700;letter-spacing:1.6px;color:var(--mute);text-transform:uppercase}
+
+/* ---------- start ---------- */
+#start{gap:14px;overflow-y:auto;padding:8px 2px}
+.brand{display:flex;align-items:center;gap:12px;margin:6px 0 4px}
+.brand .t{font-size:28px;font-weight:800;letter-spacing:-.5px;line-height:1}
+.brand .s{font-size:13px;color:var(--mute);margin-top:4px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode{text-align:left;padding:14px 13px;border-radius:18px;background:var(--surf);border:1px solid var(--line);transition:.15s;display:flex;flex-direction:column;gap:6px;min-height:118px}
+.mode .mi{width:34px;height:34px;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.mode .mt{font-size:15px;font-weight:800}
+.mode .md{font-size:12px;color:var(--mute);line-height:1.35}
+.mode .new{position:absolute;top:10px;right:10px;font-size:10px;font-weight:800;letter-spacing:1px;color:var(--onAccent);background:var(--accent);padding:2px 7px;border-radius:6px}
+.mode{position:relative}
+.mode.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.optrow{display:flex;flex-direction:column;gap:6px}
+.seg{display:flex;background:var(--soft);border-radius:14px;padding:4px}
+.seg button{flex:1;padding:10px 6px;border-radius:10px;font-weight:700;font-size:14px;color:var(--mute)}
+.seg button.on{background:var(--surf);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.levdesc{font-size:12px;color:var(--mute);line-height:1.45}
+.big-btn{font-weight:800;font-size:16px;padding:17px 22px;border-radius:16px;background:var(--accent);color:var(--onAccent);transition:transform .1s;width:100%}
+.big-btn:active{transform:scale(.98)}
+.ghost-btn{font-weight:700;font-size:14px;padding:13px 16px;border-radius:14px;border:1px solid var(--line);background:var(--surf);color:var(--ink)}
+.duelin{display:flex;gap:8px}
+.duelin input{flex:1;min-width:0;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surf);font-weight:800;letter-spacing:2px;text-transform:uppercase;cursor:text}
+.duelin input::placeholder{letter-spacing:0;font-weight:500;color:var(--mute);text-transform:none}
+.err{font-size:12px;color:var(--bad);min-height:14px}
+.themebtn{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--mute);padding:6px 0}
+
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surf);color:var(--mute);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.icon-btn svg{width:16px;height:16px}
+.dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;flex:1;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--soft);box-shadow:inset 0 0 0 1px var(--line)}
+.dots.many .dot{width:6px;height:6px}
+.dot.cur{width:18px;border-radius:4px;background:var(--accent);box-shadow:none}
+.toptxt{font-size:12px;font-weight:700;color:var(--mute);text-align:center;flex:1}
+
+/* ---------- table ---------- */
+.tablewrap{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;justify-content:center}
+.rail{position:relative;flex:1;min-height:300px;max-height:470px;margin:6px 4px 0}
+.felt{position:absolute;inset:0;border-radius:44% / 30%;background:var(--felt);box-shadow:0 0 0 8px var(--soft),0 0 0 9px var(--line)}
+.ring{position:absolute;inset:0;pointer-events:none}
+.plaque{position:absolute;transform:translate(-50%,-50%);font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--surf);color:var(--mute);white-space:nowrap;border:1px solid var(--line);z-index:3}
+.plaque.out{opacity:.85}
+.plaque.live{color:var(--ink)}
+.plaque.call{background:var(--accent);color:var(--onAccent);border-color:var(--accent)}
+.dealer{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:var(--surf);border:1px solid var(--line);color:var(--ink);font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;z-index:3;transition:left .3s,top .3s}
+.opp{position:absolute;left:0;right:0;top:4%;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:4}
+.ava{width:56px;height:56px;border-radius:50%;background:var(--surf);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:var(--mute)}
+.ava.boss{background:#3E6E8E;color:#F3EEF9;border-color:#3E6E8E}
+.vname{font-weight:800;font-size:15px;margin-top:2px}
+.vtag{font-size:12px;color:var(--mute);text-align:center}
+.vcards{position:absolute;left:10%;top:6%;display:flex;gap:3px;z-index:4}
+.vcards .card{--cw:34px}
+.vstackbox{position:absolute;right:9%;top:5%;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:4}
+.amt{font-size:12px;font-weight:700;color:var(--ink);background:var(--surf);border:1px solid var(--line);padding:3px 9px;border-radius:999px;white-space:nowrap}
+.amt.allin{background:var(--accent);color:var(--onAccent);border-color:var(--accent)}
+.bubble{position:absolute;top:-10px;left:50%;transform:translate(-50%,-100%) scale(.9);background:var(--surf);color:var(--ink);font-size:13px;font-weight:600;line-height:1.3;padding:7px 12px;border-radius:14px;max-width:82%;opacity:0;transition:.25s;pointer-events:none;z-index:8;box-shadow:0 6px 16px rgba(0,0,0,.12);border:1px solid var(--line);text-align:center}
+.bubble.on{opacity:1;transform:translate(-50%,-100%) scale(1)}
+.bet{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;z-index:4;transition:opacity .25s}
+.bet.v{top:28%}
+.bet.h{bottom:9%}
+.bet:empty{opacity:0}
+.center{position:absolute;left:0;right:0;top:58%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:9px;z-index:2}
+.street{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--mute);text-transform:uppercase;min-height:13px;text-align:center}
+.board{display:flex;gap:5px}
+.board .slot{width:calc(var(--cw)*.76);aspect-ratio:5/7;border-radius:7px;border:1.5px dashed var(--line)}
+.board .card{--cw:calc(clamp(52px,15.5vw,66px)*.76)}
+.potrow{display:flex;gap:8px;align-items:center;justify-content:center;min-height:28px}
+.ante{font-size:11px;font-weight:600;color:var(--mute)}
+.ante.no{color:#5A3A10;background:#E6CB97;padding:3px 8px;border-radius:999px}
+.log{font-size:13px;color:var(--mute);min-height:18px;opacity:0;transition:.2s;text-align:center}
+.log.on{opacity:1}
+.eqbar{width:76%;max-width:280px;opacity:0;transition:opacity .3s}
+.eqbar.on{opacity:1}
+.eqlabels{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:4px;color:var(--ink)}
+.eqtrack{height:6px;border-radius:3px;background:var(--bad);overflow:hidden}
+.eqfill{height:100%;background:var(--accent);width:50%;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.banner{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%) scale(.85);font-weight:800;font-size:18px;padding:10px 18px;border-radius:14px;background:var(--surf);border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.12);opacity:0;transition:.25s;white-space:nowrap;z-index:9;pointer-events:none;max-width:92%;overflow:hidden;text-overflow:ellipsis;color:var(--ink)!important}
+.banner.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.mearea{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-top:-50px;z-index:5;min-height:calc(var(--cw)*1.45)}
+.hcards{display:flex;gap:6px;position:relative}
+.hcards .card:nth-child(1){transform:rotate(-3deg)} .hcards .card:nth-child(2){transform:rotate(3deg)}
+.mystack{display:flex;flex-direction:column;align-items:center;gap:4px;position:absolute;right:8px;bottom:6px}
+.mini-badge{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none;z-index:10}
+.mini-badge.on{animation:mb 1.4s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes mb{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}18%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-4deg)}78%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-4deg)}100%{opacity:0;transform:translate(-50%,-50%) scale(.95) rotate(-4deg)}}
+.hud{display:flex;align-items:center;gap:10px;padding:8px 6px 2px}
+.hud .pos{font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;background:var(--surf);border:1px solid var(--line)}
+.hud .hn{font-size:17px;font-weight:800}
+.hud .hn small{font-size:12px;font-weight:500;color:var(--mute);margin-left:6px}
+.hud .eq{margin-left:auto;width:132px;font-size:12px;color:var(--mute)}
+.hud .eq .row1{display:flex;justify-content:space-between}
+.hud .eq b{color:var(--ink);font-weight:800}
+.wrbar{height:4px;border-radius:2px;background:var(--soft);margin-top:4px;overflow:hidden}
+.wrbar i{display:block;height:100%;background:var(--accent);width:0;transition:width .5s}
+
+/* ---------- actions ---------- */
+.actions{display:grid;grid-template-columns:48px repeat(2,1fr);gap:8px;padding-top:10px;align-items:center}
+.act{height:56px;border-radius:16px;font-weight:800;font-size:16px;transition:transform .1s,opacity .2s;position:relative;line-height:1.1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.act small{display:block;font-size:11px;font-weight:600;opacity:.75;margin-top:2px}
+.act:active{transform:scale(.96)}
+.act:disabled{opacity:.35;pointer-events:none}
+.act.fold{background:var(--surf);color:var(--ink);border:1px solid var(--line)}
+.act.mid{background:var(--blue);color:var(--onBlue)}
+.act.go,.act.more{background:var(--accent);color:var(--onAccent)}
+.act.hint{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--surf);color:var(--mute);font-size:18px}
+.act.hint .cnt{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:var(--onAccent);font-size:10px;display:flex;align-items:center;justify-content:center}
+.act.hint.used{background:var(--soft)}
+.sizes{display:none;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:10px}
+.sizes.on{display:grid}
+.sizes .act{height:52px;font-size:14px;background:var(--accent);color:var(--onAccent)}
+.sizes .act.allin{background:var(--ink);color:var(--bg)}
+.sizes .act.back{background:var(--surf);color:var(--ink);border:1px solid var(--line)}
+.hintbox{font-size:13.5px;line-height:1.5;background:var(--soft);color:var(--ink);border-radius:14px;padding:11px 13px;margin-top:10px;display:none}
+.hintbox.on{display:block;animation:fadein .25s}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}}
+
+/* ---------- chips ---------- */
+.chips{display:flex;align-items:flex-end;gap:2px}
+.cstack{display:flex;flex-direction:column-reverse;align-items:center}
+.chip{width:var(--chs,18px);height:var(--chs,18px);border-radius:50%;background:var(--cc);border:2px solid var(--cr);box-shadow:inset 0 0 0 3px var(--cc),inset 0 0 0 4px var(--cr);flex-shrink:0}
+.cstack .chip+.chip{margin-bottom:calc(var(--chs,18px) * -.8)}
+
+/* ---------- cards ---------- */
+.card{width:var(--cw);aspect-ratio:5/7;perspective:600px;position:relative;flex-shrink:0}
+.card .in{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.3,.7,.3,1)}
+.card.down .in{transform:rotateY(180deg)}
+.card .face,.card .back{position:absolute;inset:0;border-radius:calc(var(--cw)*.14);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.card .face{background:var(--card);border:1px solid var(--cardLine);color:var(--black);font-weight:700}
+.card .face.red{color:var(--red)}
+.card .ix{position:absolute;left:calc(var(--cw)*.1);top:calc(var(--cw)*.06);display:flex;flex-direction:column;align-items:center;line-height:1}
+.card .r{font-size:calc(var(--cw)*.34)}
+.card .s{font-size:calc(var(--cw)*.24);font-weight:400}
+.card .big{position:absolute;right:calc(var(--cw)*.1);bottom:calc(var(--cw)*.06);font-size:calc(var(--cw)*.46);line-height:1;font-weight:400}
+.card .back{transform:rotateY(180deg);background:var(--back);border:2px solid var(--backLine)}
+.card.deal{animation:deal .35s cubic-bezier(.2,.8,.2,1) both}
+@keyframes deal{from{transform:translateY(-50px) scale(.7);opacity:0}}
+.card.win .face{box-shadow:0 0 0 3px var(--accent)}
+.card.dim{opacity:.4}
+
+/* ---------- grade marks ---------- */
+.badge{width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--gc);color:var(--gi)}
+.badge svg{width:62%;height:62%}
+.medal,.stamp{width:76px;height:100px;border-radius:14px;background:var(--gc);color:var(--gi);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transform:rotate(-4deg);flex-shrink:0}
+.medal svg,.stamp svg{width:34px;height:34px}
+.medal .lbl,.stamp .lbl{font-size:10px;font-weight:700;text-align:center;line-height:1.15;padding:0 6px}
+.mini-badge .medal,.mini-badge .stamp{width:62px;height:80px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.mini-badge svg{width:28px;height:28px}
+
+/* ---------- review sheet ---------- */
+.sheet-bg{position:fixed;inset:0;background:var(--shade);opacity:0;pointer-events:none;transition:.3s;z-index:20}
+.sheet-bg.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:50%;bottom:0;width:100%;max-width:480px;transform:translate(-50%,105%);transition:transform .4s cubic-bezier(.2,.8,.2,1);background:var(--sheet);color:var(--ink);border-radius:28px 28px 0 0;padding:12px 20px calc(var(--safe-b) + 16px);z-index:21;max-height:90dvh;overflow-y:auto}
+.sheet::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.sheet.on{transform:translate(-50%,0)}
+.l1{display:flex;align-items:center;gap:18px;padding:4px 0}
+.l1 .verdict{flex:1;min-width:0}
+.l1 .vt{font-size:20px;font-weight:800;line-height:1.2}
+.l1 .vn{font-size:14px;font-weight:700;margin-top:6px}
+.l1 .vn.bad{color:var(--bad)} .l1 .vn.good{color:var(--good)}
+.l1 .vs{font-size:12px;color:var(--mute);margin-top:4px;line-height:1.35}
+.result{font-size:14px;line-height:1.5;padding:12px 14px;border-radius:14px;background:var(--soft);color:var(--mute);margin:12px 0 4px}
+.result b{color:var(--ink)}
+.layer{display:none;padding-top:8px}
+.layer.open{display:block;animation:fadein .25s}
+.toggle{width:100%;display:flex;justify-content:space-between;align-items:center;padding:13px 2px;font-weight:700;font-size:14px;color:var(--accent);border-bottom:1px solid var(--line)}
+.evrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 10px}
+.evbox{border-radius:14px;padding:11px 12px;border:1px solid var(--line)}
+.evbox.best{border:1.5px solid #9CC2AC}
+.evbox .k{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--mute);display:flex;justify-content:space-between;text-transform:uppercase}
+.evbox .k em{font-style:normal;color:var(--good)}
+.evbox .a{font-size:15px;font-weight:800;margin-top:4px}
+.evbox .v{font-size:18px;font-weight:800;margin-top:3px}
+.evbox .d{font-size:12px;color:var(--mute);margin-top:1px}
+.evbox .h{font-size:12px;font-weight:600;margin-top:4px;color:var(--mute)}
+.explain{font-size:14px;line-height:1.55}
+.explain p{margin-bottom:8px}
+.explain .warn{background:#E6CB9744;border-radius:10px;padding:8px 10px}
+.explain .tip{color:var(--mute)}
+.math{font-size:13.5px;line-height:1.55}
+.math p{margin-bottom:6px}
+.math .eq{font-weight:700;font-size:13px;background:var(--soft);padding:6px 9px;border-radius:8px;display:block;margin:3px 0 9px}
+.optlist{display:flex;flex-direction:column;gap:4px;margin:6px 0}
+.optlist div{display:flex;justify-content:space-between;padding:7px 10px;border-radius:9px;background:var(--soft);font-size:13.5px}
+.optlist div span:last-child{font-weight:700}
+.optlist div.best{box-shadow:inset 0 0 0 1.5px #9CC2AC}
+.optlist div.me{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.optlist div.best.me{box-shadow:inset 0 0 0 1.5px #9CC2AC,inset 0 0 0 3px var(--accent)}
+.gridwrap{margin-top:10px}
+.tabs{display:flex;gap:6px;margin-bottom:8px;background:var(--soft);border-radius:12px;padding:3px}
+.tabs button{flex:1;padding:8px;border-radius:9px;font-size:12px;font-weight:700;color:var(--mute)}
+.tabs button.on{background:var(--surf);color:var(--ink)}
+.gridtitle{font-size:12.5px;color:var(--mute);margin-bottom:6px}
+.grid{display:grid;grid-template-columns:repeat(13,minmax(0,1fr));gap:2px;border-radius:8px;overflow:hidden}
+.grid div{aspect-ratio:1;min-width:0;overflow:hidden;font-size:clamp(6px,1.9vw,9px);font-weight:700;display:flex;align-items:center;justify-content:center;color:var(--mute);background:var(--gridOff);border-radius:2px}
+.grid div.sh{color:#fff}
+.grid div.me{outline:2px solid var(--ink);outline-offset:-2px;color:var(--ink)!important;background:#E6CB97!important}
+.legend{display:flex;gap:12px;font-size:11.5px;color:var(--mute);margin-top:6px;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px;background:var(--c)}
+.next{margin-top:14px}
+.handline{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;margin-top:6px;color:var(--ink)}
+.handline b{font-weight:800}
+.red{color:var(--red)}
+.timeline{display:flex;gap:6px;overflow-x:auto;padding:8px 0 4px;scrollbar-width:none}
+.timeline::-webkit-scrollbar{display:none}
+.tl{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border-radius:12px;border:1px solid var(--line);min-width:62px;position:relative}
+.tl.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.tl .st{font-size:10px;font-weight:700;color:var(--mute);letter-spacing:1px;text-transform:uppercase}
+.tl .ac{font-size:11px;font-weight:600;white-space:nowrap}
+.tl .key{position:absolute;top:-8px;right:-6px;font-size:9px;font-weight:800;background:var(--bad);color:#fff;padding:1px 5px;border-radius:5px}
+.dtitle{font-size:16px;font-weight:800;display:flex;align-items:center;gap:10px;margin-top:10px}
+
+/* ---------- result / summary / aquarium ---------- */
+#summary,#aqua,#result{overflow-y:auto;padding:6px 2px 10px;gap:12px}
+.card2{background:var(--surf);border:1px solid var(--line);border-radius:22px;padding:18px}
+.bignum{font-size:60px;font-weight:800;line-height:1;letter-spacing:-1px}
+.verdict2{font-size:14.5px;line-height:1.5;color:var(--mute)}
+.counts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.cnt{display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line)}
+.cnt b{margin-left:auto;font-size:15px}
+.hist{display:flex;flex-direction:column}
+.hitem{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line);font-size:13px;width:100%;text-align:left}
+.hitem .n{color:var(--mute);width:16px;font-weight:700}
+.hitem .mid{flex:1;min-width:0}
+.hitem .mid small{display:block;color:var(--mute);font-size:11.5px;margin-top:1px}
+.hitem .r{font-weight:800}
+.hitem .mb{display:inline-flex;gap:2px;vertical-align:middle}
+.hitem .mb .badge{width:15px;height:15px;border-radius:4px}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.codebox{display:flex;align-items:center;justify-content:center;gap:10px;font-size:28px;font-weight:800;letter-spacing:4px;padding:16px;border-radius:16px;background:var(--soft)}
+.vs{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;text-align:center}
+.vs .who{font-size:12px;font-weight:700;color:var(--mute);letter-spacing:1px}
+.vs .n{font-size:40px;font-weight:800}
+.vs .x{font-size:14px;font-weight:800;color:var(--mute)}
+/* aquarium map */
+.depth{display:flex;flex-direction:column;gap:10px}
+.depthrow{display:flex;align-items:center;gap:10px}
+.depthrow .dn{width:92px;font-size:12px;font-weight:700;color:var(--mute)}
+.bub{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:var(--surf);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--mute);flex-shrink:0}
+.bub.done{background:var(--soft);color:var(--good);border-color:var(--good)}
+.bub.cur{background:var(--accent);color:var(--onAccent);border-color:var(--accent);box-shadow:0 0 0 4px var(--soft)}
+.bub.boss{width:48px;height:48px;font-size:12px}
+.bub.boss.todo{background:#3E6E8E;color:#F3EEF9;border-color:#3E6E8E;opacity:.8}
+.line{flex:1;height:2px;background:var(--line);max-width:18px}
+.perks{display:flex;flex-wrap:wrap;gap:6px}
+.perk{font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--soft);color:var(--ink)}
+.pick{display:flex;flex-direction:column;gap:10px}
+.pickc{text-align:left;padding:16px;border-radius:18px;border:1px solid var(--line);background:var(--surf);display:flex;gap:14px;align-items:center;width:100%}
+.pickc .pi{width:44px;height:44px;border-radius:12px;background:var(--soft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pickc .pt{font-size:15px;font-weight:800}
+.pickc .pd{font-size:12.5px;color:var(--mute);margin-top:2px;line-height:1.35}
+.pickc:active{transform:scale(.98)}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stat3 b{display:block;font-size:20px;font-weight:800}
+.stat3 span{font-size:11px;color:var(--mute);font-weight:600}
+.toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 24px);transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);font-weight:700;padding:10px 16px;border-radius:12px;opacity:0;transition:.3s;z-index:40;font-size:14px;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.shake{animation:shake .5s}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.flash{position:fixed;inset:0;pointer-events:none;z-index:30;opacity:0}
+.flash.red{background:radial-gradient(circle,rgba(182,95,108,0),rgba(182,95,108,.3));animation:fl .6s}
+.flash.cyan{background:radial-gradient(circle,rgba(62,110,142,0),rgba(62,110,142,.3));animation:fl .7s}
+@keyframes fl{30%{opacity:1}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:35}
+@media (max-height:720px){.rail{min-height:250px}.ava{width:46px;height:46px;font-size:15px}.act{height:50px}.mearea{margin-top:-40px}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- START -->
+  <section class="screen on" id="start">
+    <div class="brand"><div id="mascotTop"></div><div><div class="t">Фишка</div><div class="s">покерный тренажёр · не будь рыбой</div></div></div>
+    <div class="modes" id="modes"></div>
+    <div class="optrow" id="levelRow">
+      <div class="lbl">Уровень</div>
+      <div class="seg" id="segLevel"><button data-v="novice">Новичок</button><button data-v="pro">Профи</button></div>
+      <div class="levdesc" id="levDesc"></div>
+    </div>
+    <div class="optrow" id="lenRow">
+      <div class="lbl">Раздач в серии</div>
+      <div class="seg" id="segLen"></div>
+    </div>
+    <div class="optrow" id="duelRow" style="display:none">
+      <div class="lbl">Принять вызов друга</div>
+      <div class="duelin"><input id="duelCode" maxlength="9" placeholder="Код вызова, например K3F9-A2X7" autocomplete="off" spellcheck="false"><button class="ghost-btn" id="btnAccept">Принять</button></div>
+      <div class="err" id="duelErr"></div>
+    </div>
+    <div class="levdesc" id="aquaInfo" style="display:none"></div>
+    <button class="big-btn" id="btnStart">Играть</button>
+    <button class="themebtn" id="btnTheme"></button>
+  </section>
+
+  <!-- GAME -->
+  <section class="screen" id="game">
+    <div class="top">
+      <button class="icon-btn" id="btnHome" aria-label="В меню"><svg viewBox="0 0 16 16"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+      <div class="dots" id="dots"></div>
+      <button class="icon-btn" id="btnMute" aria-label="Звук"></button>
+    </div>
+    <div class="tablewrap">
+      <div class="rail" id="rail">
+        <div class="felt" id="felt">
+          <div class="ring" id="seats"></div>
+          <div class="dealer" id="dealer">D</div>
+          <div class="vcards" id="vCards"></div>
+          <div class="vstackbox"><div class="chips" id="vChips"></div><div class="amt" id="vStack"></div></div>
+          <div class="opp" id="villain">
+            <div class="ava" id="vAva"></div>
+            <div class="vname" id="vName"></div>
+            <div class="vtag" id="vTag"></div>
+            <div class="bubble" id="bubble"></div>
+          </div>
+          <div class="bet v" id="vBet"></div>
+          <div class="center">
+            <div class="street" id="street"></div>
+            <div class="board" id="board"></div>
+            <div class="potrow"><div class="chips" id="potChips"></div><div class="amt" id="pot"></div><div class="ante" id="ante">анте 1 BB</div></div>
+            <div class="log" id="log"></div>
+            <div class="eqbar" id="eqbar"><div class="eqlabels"><span id="eqH">Ты 50%</span><span id="eqV">50%</span></div><div class="eqtrack"><div class="eqfill" id="eqFill"></div></div></div>
+          </div>
+          <div class="bet h" id="hBet"></div>
+          <div class="banner" id="banner"></div>
+        </div>
+      </div>
+      <div class="mearea">
+        <div class="hcards" id="hCards"></div>
+        <div class="mystack"><div class="chips" id="hChips"></div><div class="amt" id="hStack"></div></div>
+        <div class="mini-badge" id="miniBadge"></div>
+      </div>
+    </div>
+    <div class="hud">
+      <span class="pos" id="hPos">BTN</span>
+      <span class="hn" id="hName"></span>
+      <div class="eq"><div class="row1"><span id="hEqL">шансы</span><b id="hEq">—</b></div><div class="wrbar"><i id="hEqBar"></i></div></div>
+    </div>
+    <div class="actions" id="actions"></div>
+    <div class="sizes" id="sizes"></div>
+    <div class="hintbox" id="hintbox"></div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="screen" id="summary">
+    <div class="card2">
+      <div class="lbl">Итог серии · точность решений</div>
+      <div style="display:flex;align-items:center;gap:14px;margin:8px 0 6px"><div class="bignum" id="sAcc">87%</div><div id="sMascot" style="margin-left:auto"></div></div>
+      <div class="verdict2" id="sVerdict"></div>
+    </div>
+    <div class="card2"><div class="counts" id="sCounts"></div><div class="levdesc" id="sBB" style="margin-top:10px"></div></div>
+    <div class="row"><button class="ghost-btn" id="btnCopy">Скопировать</button><button class="big-btn" id="btnAgain">Ещё серия</button></div>
+    <div class="card2"><div class="lbl" style="margin-bottom:4px">История раздач</div><div class="hist" id="sHist"></div></div>
+    <button class="ghost-btn" id="btnMenu">В меню</button>
+  </section>
+
+  <!-- AQUARIUM HUB / DUEL RESULT -->
+  <section class="screen" id="aqua"></section>
+  <section class="screen" id="result"></section>
+</div>
+
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="sheet">
+  <div id="sheetBody"></div>
+  <button class="big-btn next" id="btnNext">Дальше</button>
+</div>
+<div class="flash" id="flash"></div>
+<canvas id="confetti"></canvas>
+<div class="toast" id="toast"></div>
+<script>
+// Card: 0..51, rank = c>>2 (0='2' .. 12='A'), suit = c&3
+function straightHigh(mask){
+  const m = ((mask << 1) | ((mask >> 12) & 1)) & 0x3FFF;
+  const s = m & (m >> 1) & (m >> 2) & (m >> 3) & (m >> 4);
+  if (!s) return -1;
+  return (31 - Math.clz32(s)) + 3;
+}
+function topBits(mask, n){
+  let v = 0, k = 0;
+  for (let r = 12; r >= 0 && k < n; r--) if (mask & (1 << r)) { v = v * 16 + r; k++; }
+  while (k < n) { v *= 16; k++; }
+  return v;
+}
+const CAT = 1048576; // 16^5
+function eval7(cards, n){
+  n = n || cards.length;
+  const rc = new Int8Array(13); const sc = new Int8Array(4); const sm = [0,0,0,0];
+  let mask = 0;
+  for (let i = 0; i < n; i++){ const c = cards[i], r = c >> 2, s = c & 3; rc[r]++; sc[s]++; sm[s] |= 1 << r; mask |= 1 << r; }
+  for (let s = 0; s < 4; s++) if (sc[s] >= 5){
+    const sh = straightHigh(sm[s]);
+    if (sh >= 0) return 8 * CAT + sh;
+    return 5 * CAT + topBits(sm[s], 5);
+  }
+  let quad = -1, trips = [], pairs = [];
+  for (let r = 12; r >= 0; r--){ if (rc[r] === 4) quad = r; else if (rc[r] === 3) trips.push(r); else if (rc[r] === 2) pairs.push(r); }
+  if (quad >= 0) return 7 * CAT + quad * 16 + topBits(mask & ~(1 << quad), 1);
+  if (trips.length && (trips.length > 1 || pairs.length)){
+    const t = trips[0]; const p = trips.length > 1 ? Math.max(trips[1], pairs.length ? pairs[0] : -1) : pairs[0];
+    return 6 * CAT + t * 16 + p;
+  }
+  const sh = straightHigh(mask);
+  if (sh >= 0) return 4 * CAT + sh;
+  if (trips.length){ const t = trips[0]; return 3 * CAT + t * 256 + topBits(mask & ~(1 << t), 2); }
+  if (pairs.length >= 2){ const a = pairs[0], b = pairs[1]; return 2 * CAT + a * 256 + b * 16 + topBits(mask & ~(1 << a) & ~(1 << b), 1); }
+  if (pairs.length === 1){ const p = pairs[0]; return 1 * CAT + p * 4096 + topBits(mask & ~(1 << p), 3); }
+  return topBits(mask, 5);
+}
+if (typeof module !== 'undefined') module.exports = { eval7, straightHigh, topBits, CAT };
+
+const EQ_B64 = "gODg3N3i4eDh3d7f4O3S0tTR0dbV1NbW2drt3dDQzM7S1dTU1dfY6t3ZzsnLzNDU1dPU1+rc2tTNxsvN0NPT1Nbw3NnV0M/HzMzP1dXW7uLc2dPOzsfKztLW1u7f4d3X09HNyMrO0dbv3t/f2tbT0M7Hxs/S6eDe3d/d1NTN0MfN0uzg4N7f4dzY1NPR0NTt4uHh4N/g3dnY2NDT7eTi4ODg4eDc3N7c0B+AtrS0trO2tLOztLWGV7e2t7i8ubq5ury+wcF4oKKlqKmpp6iprMDDqnSfoKOmpqmoq6y+waeod52gpqOnqaanwMatpqZ7n5+ho6epqsHDsKymp3ibnqOlp6i9wLGwq6Wme5udoaWowMKwsK6qpaN4m6Cjpr3Esa+wq6qjpHmdoaO8xbCvr66tq6ijeqCkvsaysLCvsa2qp6h+pcLIs7Oxsq+wrqqrrH4fSYC0tLSztLOvsbW0TVG0nJ6goaCgoKKjpIbBV7SvtrW4uLm6vL3Ap711oqKjqaeoqqmtvqW9p3OdnqOlqKirq8Cnw6qke56ipKinqqi/p7+rqaV6np6jpaiovqvCsaiopnqboKGkrL6mw7CsqKike52do6W7qsSvsKysqaJ7m6CkuavGtLKzramnpH6ipb6rxrSvsrGtqaaqfKbBrMe1s7Kwsa6tqq6AI0tLgLKzsbGyrrCysk1RlridoqOhoaKipKNNoFOzmZ+goqGioaKjhsC7WbGztbW5t7q7ur2norlzoaOkpqepqam+qqfApnidn6Skq6isuqypvKimepygpKWoqbyop7+rqaZ5np2lpqu8q6nDrKqop3yen6amuaqoxLGqqaWke52ho7yqqMWzsa6rp6R9oaW8q6vEtLCvqqqpqH+nvqyrxrSxsbGtqKqvgiJLS02AsbCwsKusq61LU5eXtaCloqKdoaSkTp5TlbGfoaGhoaKjpE+dl0+vnaCgn6OhoqSGwL24V66xs7S6u7u+u6ympbt3oqCip6uqrLmtpqe6p3idoqOmqKu3qaqnvamleJqipKmpuamnqcGqp6R9n6GkpraoqqrGrqmmpX6doKW1qqypxLCsq6ulfqGkt62sqcWwsrCrqal/pritqKzHsLK0sK6urYAdSUtMToCqrKmmpqeoTVKSk5O1oqCgoKKfoFGaU4+PtJ+inZ6ioKFQmJhTjq6anJ6eoqGfUJmWlU6rmJufn56foYbAurm1VqqwsbW4ubu0p6WinbhznJ6kpKqnsqanp6G6pHacn5+lq7Knpaakvaejd52coaWwqKimpcGpp6N5nqGjsaqnqKfErquppH2go7Clp6apxq+urKemfaKxrKWnqMiysa2qqqyAHkxMTk9VgKWkn6GgpE5PkpGSlrminaCfoJxRmFGPj5S0oJ2gnZ6gUpSWUo2RsqGgopygnlGZlpNRjq6dnKCfoZ9anJqYk1OsmJyfn6GhhsTAvrm3V6uts7e7uq6pqaSgobZ1nKGiqKmupaWnpaK3o3afoqKnqKemp6WluqmleZ+ko6inqamop8KqqaZ7oaSsqaipqKrFr6iop36mraerp6moxa+urK6vfx9JS05PU1qAnZeYm5pNUpKPj5eZuKGcoKKjUJhRkI+SlLmdoJ6ipFKblVKLj5GzoJqgnqFTl5SSUY2RsqCfnp+gWJ6YlpNTka6ZnaKgoF+hmpiZlVWsl5yfoaKGw8W/u7q1Wq6vtbi7pqemp6SgoLV1m5+kp6GppKWopaG6pHaboqKipqinqKmnv6aje5+jo6uoqaapqsOpp6l6pqSqp6epq6nGraysrX8eS0xNT1ZbYoCQkY+TTlKTkI6Ul5i5paCfn06WUYyQlJSXt6Genp5RmJNPi42Rk7efnJ+eUpWWkVOPjpS0oKGfnlqdmZSSUY6RsJ+fnqBgn5ialZVUja+Zn6GfZ5+im5iYlVStmZ6eoIXCwsK9vLm0V6uwtbeVqKWoo6Shn7Z4nZ6mmqempaWnpKO5oXihpZqppqalpaqmvaiqe6Obq6ilqKqoqcGrrq6BIkxQUVRZYGhvgI2LjFBVkZCQlZmWmrqjpKRSmFOQjpGWmZq2o6WkVpiUVoqPkpaYt5+koleXl5NUi4yQlLihoaBdnpmXlFiNkJOzoqSjZZ+dmZeTV46QsZ+kommfn5yYmJdVkK6coKJ0nqGfm5yXlVirmp6ihcTDxcK/uri1XK+zuJeqq6eoqqako7l8paqWrKyoqqyop6e+rXyqk6ysq6ioq6qnwa6xgSFMTk9TWV5nbnKAh4dPV5KRkZOUmJibuaajUJlRjo6QlJaZl7eipFKal1KLj5KUlpy1oqJVmJeQV46Mk5WZuKCjXJuXk5NXio2QlragoWGfnZiUk1WNjpO1oqJonZ2em5WUWY2VsZ6jcp6bmp6Yl5NYka6eoHqgoJ6enJyZllevm52HxMPCwcO9vLi5XbW7jausqqeoqKeiosB8p46rqqqmqKipqanEr4AgS0pNVFhfZHB0eICITVWQkZGWlpaXm5q6pFCYVY6Mj5KWlpeZuaJSmpZTjJCSkZiXl7iiV5eWklOLjo+RmJm2oVydmpaRVoyRkJSYuqBinpuWlJJVjY2Tk7ahaJydm5WZlFWOkpW1o3Sdnp6YmZSRV5GVsp94op+gnp+YmJZYkrOfgKKgoJ+gm5uYmVeznobDxMPDwb/AvLy8YLiMqqmqqamqrKemqMR+H0pLTVJXW2Vsc3h3gE5SkJGTkpSWlZmXnLpPmVCOjJGVk5aXmZu6UZiVU4mMjpGVl5aYulWZlZVSjI2RkZeXmbdampeVklSMjZGVmJi4YJ2cmpWUU4uMj5aZuGebnZmTlJNViZGUlblznp2bmZeUkFaMkJS0dp+enp+dm5SVU5CRs36goJ6hoJ6YlpVWkreAo5+eoKSdnJqYmle1hcTFwcLBxMG9vsHCYhJ5srK0srGysa+wsrGATbOvs7a4tra6t7m4vr5tn5qenqKkoKWjpL29pW6Vm5+gpKCjpaW6vKSfb5qZm6GhoKGjvcKopaJxm5mbn6Giob7Bqaiio3GYmJ2eoqC7wK6pp6ahc5SXm56ivMKrrKijop5xlJmbnLjErauvqaWhnXWVmJy7xq6sqayopaGfdpmbvMWwra+qrKWnpaR1n73Hr7Gvrq2tp6enqHYtqK6urK2wra2qqKqtsoDa29re5OHi4ePi4rXo0dXT0dPW1NPW1ta46N3Ry83N0tbU1NXWtOfc1s3KyM7P1NPU17bs3djSzsfJzdDT09W47t7X1NLOx8jN0NTVtuzh2tfSz8zEyc3R17bt4ODd2NTQzsbLzdOy7eDf39rW1NDNx8vRs+/f3t7f29fS0M/M0LXw4eDf3+Db2dbUzs+08eTh4uHf4d3Z2tvOLUhLaWhtbW1sbm1vb0wlgLSztrS0t7O0t7dKhly1srW5ube2urq5bsC+daCmp6qsrKurrGu+vqp3oKOkp6upq65zwcCrqHqhoqWmqauoeL7Cra2ofqGgpKWoqnO/wq+wqqd8oKCipKp0vsGyr6ulpn2dn6KldL7CtLKsq6aifJ2goXa/xLSysa6tpqJ/oqRywsWzs7CyrqmoqYSnd8PHs7KvsrKtrqysgitJY0dobG5wb29ubm5QJEuAsrK0srOxsrS1aU1Tsp2hoqekpKKjpkyFvlywsra1tra5urtvvKa6dqCkqauqrKutdL6mv6l5oqCjp6moqXO9qMOspnqfoaKoqKt1va3Br6elep2koKardryqwq+pqKV+naGlp3e6q8Oxrauoo32coKNwwKrDs6+vq6elgZ+ldL2txLOxsa+spqmDpnPBrce2srGzrqmsrYMuSGFiSmxtcHFvbm5sTCVMTYCwsbCurrCxsmtNU5ixn6Slo6empqVnUJtRr5ugoaWmpKOnTYW/vV6vsbK1uLi5unS6qKa6eKGhpKeqqat3uqqovKV9naKkpaurdbutq72opnufn6Wpq3a3rKm/rKqnfJ+hpaZ2uq2twq2sqaSAnqKmdbysq8SzsKqqpoOjpna8rKzDsa6srKirhKV3va+tx7Gws7Ctrq2ELkdfXV9KaWhramxpbUkhSU1PgKyrqqusqq1nTlORkLSfop+goaGjZk+bTpCvnpygn6OhomVTmJdRrZyeoKGgoqJPhr+8t1ivsLC1ure5cbSpo6O4dZ+hoqSpqHOzqaeltaR5np+lqalvtqeop7mppXqcnqOlb7Sqp6u+qaaje5yfpG+1pqqqxauqqKN/oqRyt6enqcKyrquqqH6mdbisqKjCs7Owqq2rgylDXlxaXUZmaGZraWtHG0tLTlOApaOjpKejZU1Sj4+SsqGhnp+goGRNlFONj7OfnZ6fn6BiUpaUUI2wmpyhnaCgZlealpNRqZiZnZ+enUiGvbm4tVisr7S0uLhxrKioo5+3c5ueoaWrcK6kpqait6N3n6Chpm2rpqemo7umoXieoJ9xrKanqKa+q6Wje6CjcK+oqKanxK2rp6l/pXCupKilpsSxr6qpq34qRl9eXV9dR2dpZ2lpSR5LTU9UWoCenZ2eoGROTpGMk5a3nqGgop9kUJVPipGVtJ6cnJ2hZFOTklKOkLGcoJ6en2ZYmJmSU4ysmp2hn6BmXpyamJNWqZean6KgS4bCwLq2tFirrrK2unCoqaeko6Czdpugo6ZtpKSoo6SjtaR3nJ+icaWnqKeno7uppHyfpm+lpqqopqvBqailfqNxqaapqqipw7Crq6yBK0VfXl1fYl5GZWdoakkdSExRVVxhgJWVlpVjTk+Ni4+UlrifoZ+iZVCXUomMkpS2oaKfoGNUlpBTi4+Rs5+enqBpWZqUklOOj66doJ6iZ2Gdl5aUUo6snJ+hnmZmoZqalZVUppmanKFJhcHDvbu4tFmqrbG5bp2mpaaipZ60eJufpG+cpaamo6WjtqF6n6Nvnaemp6emo76mqX2icJ6ppqenqKjDq6ysfylGX11iX19jWkVkZGZFHkxOUVRcYmqAjI+OZU5SkI2OlpactaKhomRQlE6Kj5CVlLifn6BjVJWRUIiOkpK2np+eZluYlI9Sio+Us6GfoGZfnpaUlFGOka+doqBmZ52bm5SVWI+unZyiaHGhn5uamZZUqpqen0uGwMDAv7q3slesrrJrk6inp6ilo6GzeqKka5eop6anqKaivKh8o22Wqaaopqqnp76prH4pRV1dXl1gX19cRmVoSBxLTU9TW2Jqc4CIiWZOT4qQkZaWl5W4oqJlUJNQio2PkZaXt6ChY1SSkVSNjo+Sl7ejoGZYlZeUT4qNjZK3nZ9mYJqYk5FUjpKSsqCiZGefmJmSk1eNjq+foGdvnJ2bl5aVVY+unJ1je5ydnJyampZXqJmaR4a/wMDBvbu1s1yus2qPqaemp6ekoZ+7eqVtjqqoqKanp6akvq19JkNcW1tgX11gW1lFY0YdSEtOVVhhaXB3gIVgS1CNjZCQk5WWlbehY0+UTIiOkJOTmZe4n2JRkpNRi4uOk5WWt59nV5mUkFKJjZCTlLadZF+ZlZWRUomOkJK3nmdnnpuXlJFTi4+Vsp1mcJycmpeUkVSNkLCdYnicm5yZl5SWU42pm2J/oJ2coJqZlpJXsJpHhsPBwsDAurq3uF20a46op6WmqKmloKO+fSVBW1xbX2NcYFtcW0VHHUhKTVJcX2pxdnqAYUtOjIuRk5SUlZeZuV9Mkk2Hjo6Rk5aYmLZfUZSQTYqLjZCWk5e0ZliXkpJSjYyOkZaVtmRenJWTklCIjJCTlbZjZZucmJWQUoiLkJO3YHCbnpiak5BUjI+SsWJ7npmamZuUkVOMjq9hfp6fnZyblpSWVZKyY3+en56cnZqZlZdXsUmGxcK+wcPBvLq7vVwSPnmysa6ur7Gtr6+wQUq1lpSYmpucmpmfnoC9T6+ytbW4trW5vLu8obxul5udoaCko6Glu5+6o2+Zm5ugoaSkpbykv6ajdJmcmqChoqK6pb6moaJzl5eanaOjvKfBqaign3aZm5ygorukvq6qpqGhdZSYnKG4osKsq6ino51zl5mcuafDrqytqaaioXabnbulxKytq6uppqKleJ65qMaurqyqqqqlp6d5Ij4+X2FlZ2dpZ2ZnZkEXebKysbKxsbGxtLRCgFCxsbW2trS1tre5Z7y8bpueo6GkpaOoqWa8vaVtm5+go6Sjp6dqu7yrpHObnZ2eo6CjbL3Dqaikd5qdm5yjom29wKyqpaV2lpqeo6NtvcCvrKiionqWmp2earzBsbGqpqSfepaam2q9wbCwrKqmpKB5m55tv8OwsK2sq6ikpHqga8DFsbKtrKypp6aqfC+HqKysrK6urqyuqq+SLqOsrKytsbCtsK+xsK+A2Nfb3uHg4OHi47a249DQ0tHU1NPV19a3tOPa0czMz8/W1dXVtbfn2tfPy83N0NTY1ra46tvY0s7Hys3Q1dW3tvDe2dTSzsfLzNXVt7js4NzY1NDMxsrP07S27uDf29fT0M7Fy8+3uO7g3uDa2NTQz8rNtbrt4eDf3t3X1NbP0ra78eTi4t/h3NfZ3NEvX0tManBwb3NvcXFxYCpKTWducG5yb3Vyc1BOJ4CwsLO0s7OwtbZQS4Zbs7W1uLi6uLu7cW+7vnqkqKmqrbCusHd0vL2sd6Kip6mrq655er2+rqp5oaCmp62qeXu/xLCuqYCioqaorHt3vsKxr6yqg5+ip6h3er7Dta6sqaiBnaOmeXe9wrS0ra2opIOkpXZ6vcS0srOwq6uqhKd4eMDFt7i0srCurrGHM11QZk5wcHBvcXFzc2UsTWJOb3BzdHJvcnRNTihPgLGxsbCvsLGzamdRU7KhoaaopqanplBPhrxdsLOztLi3urp1druou3ugpamqrayudne7qr2pfKKjpamrqnl6u6u/rKl+n6Cjqat6ebqvv66np4Genqane3i7sMKwq6ukgp+ipnh4u67Ctq+sqKSHpKZ4e72xxbO1r62qqIeoeXq+r8W2sLSwra+siTFaSWBgS2tta25vcG5hLkpeYEttbHBxbm9uSkokT06ArK2sqqysrmhnT1KPsqGhpKGlpKdmYlKXVa6enqCjo6WlUE2Fv7pcrrCws7e4unJytaekt3qgoqOnq6l3d7Opo7ylfZ+kpKWqdXW2rKe8qKZ9nqCmqHR2tKqpvauoo4Cen6N1dLWsrMKvrKulgqOldXW2rKvAs66rp6qEonR4t6urw7Oyr66rroYtV0pfXmBLa2tpa21qYSxGXVtgTWlraWlvbEpJIUxOU4ClpKWlpqZkYlBPkJKzn6WhoaKiZmRQlFOOsJ6eop+ho2hkV5eYUqqanZ6ho6FOTYa9uLhYrq2xs7q5cnGupqahuHien6KoqnNzrqqopLimepuho6pwcq+rqqa6qaZ9nKGkc3OuqKiqwKyopICgpHJ1sKmprcKtqqasgad1c7GrranCsrGrrLGBKlZHXV5dX0ZoZmlpbF0pRlhaXV5IaWlpbGtHSR5LTlJagJydm56eZGFOTo6QkbOgn56eomJhVZJPi5Gunp+fn59lZFiXklONqpqcnp+hZ2hdmZiUVKmamJugoUxLhr25trJbqq6ytbtvbKSmpaGftneZnqOobHClpKenoLiie5uhonBupKiopqW5qKV5oKRxcaeqp6SnwKimo36nbnSpqamlqcSvra6tgCtWR15eYmJiSGVmaWlbK0hbXGBeYUdjaGprSUsfTE9TW2OAlpaXl2JhUVGIj5GWtJ6ioKFmYFKPUouQkrCgn5+hamNXk5FQkI+vm6CfoGhnXZmWlFOPrZuboKFoZWecm5WXU6mXmZ6hS0yGvr24tLJaqa6ytm9xnqmoo6KftXefoqRwbp6npaejorqoe6Kkcm+apqaoqae8qKd8onFzn6epqqapwK2sroArWEZdXmFfX15JaGhoXyxJW1hfYV5gSmppakpKH0xQVVpiaYCNj41lZFFRioyQlpe2oKCgZWJQkVCIjJSVs6CgoWZkWJaPU4uNkrOjnqFkZV+ZkpRWjZGvnaGgZ2ZrnJuYlFWQrJufpGZncZ+cmpWYVqWYm55JSYbAwLq4tbJaqK2ybHCVp6alp6OgtHqkpW1vlKmoqaakpLene6VvcZemp6eprKS7rax/KldFXl1dYmFhXEhmZlopRV1ZXmBfXl1HamhGSR5PT1NaZGlygIWHYl9OUomMkpWXmLWgoWVhUpBRiYyPlJezoKJnZVSTk1GLjZGTtaCgZmZglJWSVI2NkbOgnmZmZ5uWlJJVjpCxnqBnZXCfnJWWklaNq5qfYmV4nZ6dmpmSVqibnEhLhsDBv7y5tLFbr7JsbpClqKalpKCeunqjbHCPqKaop6WmpL2qfShWQ11cX2FdYVpdRmRcKUVcWV5fXWBeXUhmQ0gdSk5TWWFocHqAiGFkUE6KjI2SlpiWtp5jXlSPTYiNj5KXlrShZmNXkpBPipCPlJa2nmVlXJaUkVKIjI6TtZ9mZ2ablJOTVIuPkrOgZmRxnpqXlJNTjpCxnWNkeZucmZWXkVWMq5plY3+dnZ+ZmZaXWKycSEuGwcHAwL65t7ZetGpwjamopqWnqaCjvn8nU0JcW15fW2FbW11FWylGWVpcX2BdXV1eRkRGHElMUVlhaHJ4d4BhYE5MiIyPk5OVmJW3YFxQj1GLi4+SlZSVtWNjVpSSUIiNkJSVl7VkZ1+VkZBTi4yQlJW2ZmVnmZeUklOIjpCStGVmbZqYlJWQVYqOkbFiY3ednZmUlpBVjZCxYWV/np2gnZSWk1eSrWNjfZ6bnZyampWXWrBJSobEv8C/wL66urhdFT8/ebCvra2uqa2trkJHkbOYmZubmpuanKBDmEmvlZebm52anZ6egMC7TKywrLW1tre5vLqenLRulZieoKSio6a5pJy7oXGZnJygpKGjvaijuqWeb5eZnJ+ho7ilprypoqB0l5mcnqS7pKXDrKWjn3WXmqGitKekwq6nqKShd5icm7eopsOur6moo6F4mZ+5p6TErqqsqqehpXeguqWpxa+vsLCrqqepeiI8WD9iZ2tkZ2dlZWdCFz96r7Cyr6+vr7CzXkNJtJiYnZ6em6Cbnz+Av1StsLGwtbi0t7dmu564bpyfnqSkoKWlaruiuaZ0mJudnaWlo2y5pr2mo3SZm5+epaNru6e/q6OidJmanaGjb7mmwq2mpKB4lpmgo2q5p8Cuq6einniXnJ9suqfCr6+ppqSeeZ2ha7umwrGtraqspaJ4oWy9qcKysK2vrKWop34mVUJEaGdpamxraGlqWiJBQWRka2poa2xrbUNDHHmusK+xrq6xr7FEQIBWsLCws7W0tbi4aGi6unOenqOkqaimqW9pubyod5udoaSmpadub7i7rKN3mp2eoKSjcnC7wa6ppXubnZ2gpHNxu8GuqaWpfJibn6NwcbnBs7CnpaB9l5ydbnK6wbOxrKekoX+conJxvMK0rqysp6alf6BvcL3DsrGwsK6qqaqBMYuKprCsra2wqa2srJEuiqOusaywrbGvs7KRkS+krK2wsa6urbGzs6upgNDW2tvg3uHi4re2tN/R0dHR0dXU19a5uLTh2dHNzc/P1dTXtbm25d7Z0MjLzNPU1ra5uOrb2NPPxsrP0te6t7fu3dnW0s3HzNDTsra27ODd2NPPzcXLzrS3ue7f39vZ1c/Oy8+0u7nw39/h29vS1s/OuLi78OLf3+Dc1trd0DZgXU5QcXJ0dHV0c3ZqNF9PUG9ydXZ1dXd4aGQvTE1wb3F3dXZ1d1NSTy+AsbGxsrGvsrNVUE6GYrOztLi2t7e7enZzurt9paaqqa2wsnl6d7q9qn+lpKiqrq57e3y7vq2qhKOlqamtfH59vMGtr6mEpKSqq319fLvCtbKvqYaepaZ7fX28wbW2rqmohaGnfH5+vMS0s7WwqqyJpnx8fb/Bt7W1sq+vr4o0X11MYlFucHJwcG9zZDJZTWRQcG5zcHJxcWRhLUpeTW1vcHNzc3NPT08pToCorayrraysaGhlVVKwn6CjqaalqFNRUIa7X6+wtLG0t7d1d3O1p7l5oKSmqa6sdXd1tKa7qX2hoqiqq3l5eLarwKumgZ6jpKp2dXe3rr6vqqaCoKGkeHp5t63EsqyrpoWipnt6e7euwrWyrKiqg6d4eXy5r8O0s7CsrK6FM1xcSl9lTW5ubW1tcWAyWElfYUxqbW9wb3FiXC5KXl5Mbm5vbXJwU05PJU5XgKSmp6Sop2ZmY1RVkrGfoqShpqNqZ2ZYm1WunKCkpaWnT1FRhry5XauysbO3t3RzdbCnpbd4oKKkqKt0dHStpqa6qXufoqSmdXR0rququqmkfqChpHd1eK6qrMCtqaWAo6V0eHewrqzCsq6pq4SkdXh3saytwrOwraquhi9ZVkpfY15MbGlrbm5fLVVKXmNgS2tqbmxuXl4rR1leYExpaWptbEpPTCROUluAoZ6eoKBmZGBQUJGQsaChoKOiamVjWZdSj6uboaKio2lnZV2VmFSqnJygpqVPT0+GvLe3XamqsbO3cnFzpqeko7Z7np+kqXByc6WnpqG1pX2doKRxcHOnqKimu6qkfKOldnR0pqarqL6rp6h+pnR1dKirqKvBrqurrIIrWVhGYGFfX0hnaWdqWylTSVpfYmFJa2lsbF9bK0dXW1pfS2hoaWxKSkofTVNZXoCTk5WVZGBeUlOLj5ayoKChoWdkYFWQUY6Pr52ioJ9mZ2Rcl5RRjamZnJ+gZWVlZZmUllOpl52dn0tKS4a6uLayWaursLNtcG+eoqSloLF4nqGjbnJynKappZ+2onuepW9xb56opKilvqiof6NzcHGfp6enqb6qqKyBKlZXSFxhXWVgSGNoaF8rU0lZYGFjXkdoZmlbWixFWV5eYGFJZ2dqSUdLIU5UWGFsgI2Pj2RgX1JRiY6PlLOgo6BnYmNXkFCMj5KxoqCeZmllXpKTUomPrZ2goWZoZ2WYlZJUk6qcoKFmZmdympiZmFeom52hS0xLhb66uLWxXqmusWtxcJWnp6WkobJ8n6RucXCWqKSpo6S1qX6mb3Jylqiop6qovKysgCxXVUVeXWNfY2BKaGlcK1RGW1xgY11gSGhnXFwqR1laXmFdX0ppZ0hLSh5QUlthbHKAhohiYV1ST4+Oj5OZtKCeZWVjVpNPho6Rk7Kfn2VlZV2Wj1OLkpCwpKFmZmVnlpKTVo+SrZuhaGVmc52XlZNZkqudoWNmZHqfnJiXllqomJpKTEyGvr29ubWxXayxa3BxjaimqqWlnrh8pmxvcJCop6eopqK5roErVFZEXV5fYWBbXUdnWipURVxeYGJgYF9HZ15XKERYW11hX19fSWpGSEcdTVNXX2pweYCGYmBcUFCIjo2TmJizoGZmYVeRUIqPkZOWtZ9lZ2NdlI9TiYyRk7WeZWZoZZeUj1SNkI+wo2dnZm+cmJSQVo6OsZ1iYmV5nJqYlZVVjqmaZGVmfp+dmJmUlFasmklMTIa/v7y7ubO0XbRub3KPp6elqqWkpL19KFNSRVtgYV5hXV1dRVopU0RYXV9eX19eYElaVilEWVhdXV5fXmFIQ0hHHUxTWF9qcHd5gGFhWlBMio2Qk5aVlrVmY2BXkVCJjZKTlpa0ZWZlXJSQUoqMjpOWsWVkZmSWlI9Tio6QkrRnZWZunJaUkFWMj5KwYmVjd56blZSUU4uPrGJlZX2dm5iZlJVXj7FjZGWAnp2cm5iWllmxSUtLhsC/vr+6trm6XhVBQUJ5r66sraiqqKpFS5SQspqdm5ycnJ2gRJlIjq+ZmZ2Zmpqcn0WZl0iql5mZm5udnZ6Avbi2Tq+ssbC1uLm7uaSgn7hzmpieoKOjpbmmpaG3onGYmZyfoqO1paalvKSic5man5+lt6WkpL2mop50mJqdn7SlpaXBqKWjoXmXnJ+1paWlw6yrpqSfd5qetKappsausKunpaN5obenp6XFsa6sq6epp3wjPlpYP2ZmaGpoZ2hmQxhBQ3qsrayrq6uurmBDS5CwnZuen52eoaNhRJdJr5eZm5+fnp+eQoC7t1Gtsq+wtbe2t2q4paK1cpybn6KlpqRtuKmju6N0mJydn6Okb7mqpbemonSam52gpm+3p6i+qqWgdJmYn6NvuKelwq2npKB5mp2fa7eoqcGuq6akoHycnWy3qarEr66qpaSkf51wuaqrw7Gura6op6p9JVhCXUJpaWtpaGhpalsjQVlAZ2lsaWptbWtFQhxEea2vqq2vrauvY2FFS7GanJ+hoKKjpUdEgLpVrq6zsbW1t7dqarajunSdnqChp6WmbnG5prmjeJuboqKmpXFxuKe9p6N7mJydo6VucLesvaulpH2ZnqCicG+4qsGuq6SmfJmdonBzuavAsK2opaF+m59vcLiswbKurqampYCgb3O6sMOwsLCtqamsgStXWEZHamxtbmxvbWpgKVVFQmhrbW9ubmxvXFolQUNoa21wbm9wcEtHRSB5qquvra2tr69JSEWAWbCxsbW2tre3cHBrt7p3nqKipKmoqXFycbe9q3mboaKlpaVydXO3u6qke5ueoKWmdXV0ucCtqqeAnZ+epHhzc7e/sKqnqH+ZnqBycXW6wLSvqqikfZ2hcnZ2usC0sq+rqKeEoXJ2dbvEs7KzsKqrq4UyiIyMqLGurqyrqKytkDKIiaGur62sr6uuspCSLoWiqqywra+usq6RkYwuna2qr6yusK+zsa6qpoDS1Njb3+De4Li4t7Xe0dHU0NDV2Ne3u7e34tvRzM3N0tbWt7q4t+bZ2NDHys7S1re2uLrp3NfUzsfLztOyt7i67NvX1tHPx8vPtLi5uOzh3NfVz87Jz7O5urju4ODb29XW0NG3u7m97uPh4eDY2djROWJiXlFUcXJwdHF0c2U1X19QUnJxdHdydHVmZDNbT1FxdHR3dnd0amNhLkxPbW50dnB3dVBSUU8tgKurrKuura1WVVJShmGws7O3tLS2enh3dbS7e6SmqKywr3h6ene2va19o6Koqq97e3p6tb2rqn+ho6apeH99erS/sKuphqOjp3p9f3u2wLSvrayGoqd6fH17tsG1sayprIakfH58fLfCtrSyr6+uiTRfYVxOZ1FucXNzcXJmN1xbTmNPb3BxcXR0ZGAzV0xhT25vc3NydGdgYS5MYE5vcHFxcXJTTVFOK1SApqekpainbmloZlZVr5ygo6Smp1RSUlCFuGOtr7KztLR0dHZyraa2fZ+jqKivd3d2e7Cquah8oKKmp3d5eXmxrbuqp4KgpKR6eXt3sq+/sauog6OmfHl6e7Gwv7KvqquEpXl4e3yxrsG2saqsrocyWVxbTGRiTWtvbHBuZDFbVk1hZU5ubXBxcmRfMFZMYWFRbWtwcHBhYVwuS19gTmlwcHJvTlBMTidUWYCfoJ6hn2ppZWdWUZKunaGkpKRqbGpoXphWrZ6do6SmVVJTUIa5t1+qsK6zuXR0c3SnpaC1e5+gpqh0dXRzp6qkuqh/nKGldHRzdKmpqrappICipnZ3dHWqqqq8rqeogqV0dnh2q6yswLCsq66EL1xaWUtgY19La2publ4wWFRKX2NjTG1tbG9fXDBVS19hYU9qa21tX1tbLkdcXV9Na2xsbE9PTkokU1hggJWWlJdqZmNgV1KPkq+epKOiZmplY16WUY6sm56joGxoamVlmpdVqJmgoKNPUFFPhru0sl6qq62zcXN1cJ2ooqS0e5yfo3JxcnCcqqiktqV8nqZzdHF1n6ipprqnp32ldHR0dKGqqay/q6usgSxYV1hFYF9gX0dmZ2heK1RVR15eX2BJaGppXlspUkdcXWBfTGhoaltbVipJVlteX0xmZ2lKSkpJIFRbX2qAjY+MaGdjX1hSjI6RsJ6hnmVlZGFdk1KMkaugoJ9pZGRkZJOSVZGpmp2hZmdlZHCblZNXpJicoUpNTU2Guriyrl+np69tcHBvkaimop+zeaGjbW5wcZWnqKWktKZ8pm9xcXCUqKeopriprIAsVldWRGFgYV5eR2ZoXyxWU0dfYmFhYUhpbFtcKk9IXGBgYF9MaWtdX1crSFleX19fS2dqR0hKSR9RWmFpcoCHhWhlYmBVUYuOjpOxn6FnZmZjXZFRi5GQsZygaGZmZmSTkleNjqudoGlkZWdwl5aUWY+rmp9lZ2ZjeZuZl5RWqJicTE1MTIa8urWxrV6sr29tcG+PpqinpJ+zfaNudHFuj6aqpqWlua1/K1lUVkRgXmBgXl9JZl4rVFRGXV9hYWBcSGhbWCpRRVpeYGBfX0tqXFpZKEhaWVxeXF9MaUZJSEghUldea3B4gIZoZGBeV0+HjZCSl7OfZGhjY12RUouKj5KznmdlZWVjkZFUiI6Sr6FmZmVnb5iTklWOjqudZmVmZneYmZSUWY+qmmNpZmZ8nZuXlpNarJ5LTktMhr68urextFyub29wb4+opqikoqK7fylYVFZBXmBfYV9cXkhcKFFSRV1fYF9hX2BLWlgqT0VaXGBeXl1eSllaVilEV1xdXl9hX0pESEhIH1JYYGhzenmAY2NiXVVQiI2RkpaXs2VmY2JbkVOHjZKTlbJlY2diY4+PUoqPkJOyaWRkZm6WkY9WjI6RrmVlaWR5npiRklmKkK5mZmZkfaKcl5WVVo+uZWVoZX6fnJmXl5ZarUtNSk+Gv7y8ubO2uF8PPz9BRHmlp6Wio6OlQkmMi4uwmZmWmZmYmUOVSoiKr5ealZmYmZxGlZBGhayVlZiYmpmZRpWVj0epkZWVl5eXnIC8urSySqmtrrG4trqwpKCcmrNsmJmdnqSirqSioJy1n2+VmJyipLChoqKfu6Kfc5mcnJyvoqGgoL+npZ9zlpidsKKjoaHCq6Sio3WYnquho6Ghwq6spKSmd5+spaSjocarq6unqql5IzlYVVM/Y2FiYWRiZT0TPkFFeainpqSnqKdbREiLibKbm5ybmpycW0SWR4mumJqbnZqZnFtHlY9HqpaWmZiam5xDgLu2tE6trbCzs7S4Z7OjnqC4cZecoKGloWexqaGit6JvlpiboaFpsKOloLekn3OWnZ2gZ6+ipaa6pqGgdJiZn2aypKaiwauppaB4m51nsaOkpcKrqqejpXicabWmpKjDr7Cpp6apfCZSPFhZRWVnZmZoZWhXIj9ZV0BlZ2VnamZoQEMYQ0R6qKeop6uoqWNdRkuMr5mcn5ycnp9fWkmUSK2XmpycnZ+dRUSAurdRqLCusrS2uGhrsqSitXGWnJyhpaZsbLKjpLyjd5icnaGkbmyzqKS6o6F2lZ2eoGxssqaou6iloXiZmZ9rcLKoqMGsqKOhfJ2fbG2yqKfCra2opKJ8n2tvtKilwq6uraaoqXwqWVU/WkZnaWtobGlqWidUQFlDaWZra2hrbVlUJUJXQGhobGlsbWtERkMeRXmnpqqoqaioYF1cSEqtmZifoJ+hoktJRYC7V6qusbG0tLZtbm2woLhzm56ep6qmbm9us6W6qHeZm5+ipHNxcbGnvKmleZmdnqRvcW+yqbyppqV7mJudcHBws6m/rquon32bn29wcbOrwbCqqaSmfqNwcXK0rMKwsqyoq6iBL1lbWURKbGxta2xubV0tV1ZFSGxtbXBrb21cWyhTREVnbW5wbG9tXllXJkREZGhvb2xubkdKRUUheampqKeqqKpNS0hEgFuvsK2ytLK2cXFwZrG6dJ+fo6amq3FudW2yuqd3nJ2ioKhycHFws7uqpXydnKCkc3RzcrS8railgpudoHJ1dXWzv6+rqaaBnaFxdHZ0tb6yrqulpYOhdHd0c7TAsrOuqquqgzCEhIeIqaysrqeoqauOMYWGh6eurKytsK2ti4wwiISjrayvrK6wr46LiC6CoKqtrq+wr6+MjYuILp6qrq2trrCvtbGuqKSA0tbY3N/h4LS2trWy39HQ09LT19eztra3t+Lb0czNzdLYtbS5trbk3NjOy8vP0rC1trW56t3X0s3JytGzt7i3t+3d29bP0czQs7i5uLXt493b1NTPzrS2uLq47uLj4Nna3dA4YGFiXVVTbnFydXNzZDheXV5QVnNxdXV2cmZkNF1fUVVyb3R0dXdmZ2QyWlBRcHFzeXV2ZWNiYS5PUG1wc3R4d1ZSV1VQLYCkpKenp6hZWVZRUIdkra2utLO0dnd5d3asuHqkpKetr3d5eHp2sbirf6Cjp6p6eHl4fK25q6iDn6Clent8fX6xvrCsqIelpHt8fH1+s721r6ewh6N6fHt8frK9tLGsr6+IM2BdYF9PZ1Fub3JucmY2XV9eT2dTcHBycnNjYjJdWk9lVXBycm9yY2RiMllPY1RwcHFwcmdkYV0rTGNRbXFxcnJSUk9RTylbgJ2fnqGfa21naGdeU6yfn6Smo1VUV1ZQh7ZjrKqusbN1d3R1dKWmtX2eoaaqdnd1dXinpbaogJ6fpXd5eXt6qaq7q6eFoqZ3eXh4fKmtu66qq4SmeXp6fXiqsL+yq6uvhzNeW1tdTmNmT2xvb25kMlpcW09mZVFrcm9xZWIyWFZPYmVQbW5wb2NiXjBVS19kUG1ubm1hYF9dL0xfYlBucW9uUU9RTlInW2KAlZaXl2xsaGVlW1SOrJ6io6NsbGppZ2WXVKaboKKlUlRTVlKGtbRfp62ssXJ0c3R3nqShsHygoKR3dnZ0daKqpLOlfqKkeHV1dnagqqi1pqaBpHZ6enV4oaurvausrYMwXFdbWEpgYmBMaWtqYC9ZWFhKYmJiTG1sbl9hL1ZVTGFjZExsa2tfYlswVk5bXmJObGxsX11eWy9IXF5hT2xtbU5MTU5NI1hgaoCOjo1pa2hlY11UjpKsnqChZ2lnaWNll1OMqZyeompqamhmbZeVWaWbm55OUFFRU4W2s7Fdqaitb3BzdHOXp6ShsXygonB0dHNylKimo7CnfqNvdXVydJeqqae2rKp/KlhYVFRHYF1gXUlnZ14sVlZVRWBeX15Ia2leXCtUUkheYV9cSmlqW1pZKlJLWl1dXU1paVxaWFYqS1tbW2FOaGlHTEtLSyBYYWlxgIaIY2dlY15bUouKjqyenmRlZmRiYpNSiZGrm55lZWZmYWyWkFOLqJ2bYmdkZGd5l5WTVaSYmkpOTU5QhrezsatcqKxrcHFwbo6mpKGesnyhbHFwcW+NpqekorWqfipWVVdVRl5fYVtfRWddLFRXVkhhYGFgYklqXV8nVFNHXGBgYV9JaF5aWitPSFpdX19gSmlcWVpXJ0tZW1xeYExoSUtJS00eWF5ocXmAiGZmY2FdXFKHjo2Tr6FoZWZkYGOQVYyNkaqdZmZoZmRuko9TjY+qnGVnZ2dld5eRkliNpZplaGdlZ4GYlpaWWaibSU1KTlCGurW0r7NfrGxub29wj6enpJ6ft38pVVdTU0ReX19cXl9HXipXVlRGYl9dX2BiSV1cKVFRRV5eX15fYUpcXFgoTUhYXGBhYGBLWltZVihJWFtdYV5gTEVHR0lJH1dgaHJ3d4BkZWNhXVtRh4eOlJavZmVoY2FjkFCHjI+TrWdlZmRjbJOMVIyOka5jZmZkZXaUko9VjI6pZWVnZWd+mZeUlFePq2JpZWVmf5+Ym5aWWKtKS01QUYa4ura0s7ReET5ARUZLeaCfmp6dn0FHh4yIjreZmJmZm5tFk0mGiY2xmJebmZqbQpORSoaKsJaZmZqamkaSkY5IhauVmZqYm5pPmJeSjkumlJOWnJmbgMK/ubSwT6qrrrK3uKykpJ+enLJvmJmdoKSqo6Gjop21n2+VmJ6fp6OkoqOhuqGgc5ebnaSkpaGipMGno551nZ2moqOko6bCq6ifpXagp6OlpKOmxauqqKiqeR08WFNSWDteYGBgYWI+EUFCRUt5oZ6gn6ChWkJHhYiNspeYmpmamFdGkEaFiK6YmJaamJlZR46NRIetk5WamZeZW0yUkY5JppKTlJiZmj2Aube0sEqorK6xtrdlqaSinpqxbZWYnJ6jZaueo56etqFzlpqen2aooZ+inruinnGWm5tnq6Kjop+7pqOedZecZ6mho6Sjw6mooaN5nmarpaOhocGwqqSmqHsjT0BWWVo/ZWdiYmRjViE9V1VWQmNiYWVmY0E8FUJESnmioqCfo6BcWUdJiIyumpuampyaWlZGjkiIrZWam5mcnF9cTZKPSamYl5eanJxARoC6t7RRq6mtsrm4ZWeto52dtXSYmqCgo2ZnqqOfnrehc5eanaFrZ6mhpqO5oaB1mpufaGqrpKOlu6qkoXWcoWxtqqWlqcKsqKOmep1qZ66lpqbArqmqqad8JlNUQ1hdQWdlZmdpZVcoUjxXXEZlaGlnampZViRBVVhCZmZma2lqRUJEGkVKeaKjoaKio15cWUhIiq+XnJ6cnJ1jYVtPmUqul5qanJ6eRkhFgLu0U6itq7C2tGpsbK2in7Nym5mfoqRsbG6spKO4pHeYmaGlampvq6mluqageJabnm5ua6qopr2opJ55nZ9vb2+rqaq/rKijpnygcHFtrampwLKqp6ipfSxZVldFYkZmamhra2pdK1JTQ1xHZ2lrbGpsXlcnUUJbR2dpbWprblpZUyFCWENqaG1pa2tIREZCHUt6oaGioqKkZV9dX05Nr5ianKGioktLSESAt1aorrCwsrNtbGxqrKK2d5ydoaOmbnFucayjtqR3mZufpXFwb2+uprmopXmanaJucnFyq6m5qqaifJ2gc3JvcbCrv66opqZ/nXFwcnCtqr6yrqimqYMxWFpZWEdIampsbG1rXC1XWVpHSmxra25ubV1bLVVWSEdra2ttbm9hXFwmVUZGZ2tscHBvXVxcVCRER2dpbG5ubkxHSkdFIHihpKKko6RPT0tLSIBYq6yqsbGycW5xcGyrtnWen6OnqW5ycXFyqbWlfJufnqdwcnJzdK63qaZ+mZ2dcXV0c3euuqyopICioHRzdHRyq7yxq6epgKB1dHV2dLC8s62qq62DMYeFhYeMqKqrqKqqrI4xgYWCiqepra6rra+MiDGGg4Wnq6ypq62skIuIL4CGoquuraysrY6Lh4YuhJyprq2urayTjo6Miy6brKurra2usLWurKmngNHS19vg4La2trWys97Qz9PR09e4t7W2tLTh2tHMz9HSs7O1tLa15tnWz8fLz7G0tbe1tunc1tTRzNCzuLS2uLfu3trU1dDRs7a2tbW37uPg19nczzhkYWNiY1RTcnFycnRnOF5gYmBTVnFxcXZ3aGU4Xl1fUVZwcnJ3dGhmZTdaX1RVcnZ0dnVnZ2RkM1tSUnFzdHR4Z2hpZGAvUlNxcXR4eFVXVFdXVC6Am56eoKJWWlpYVlWGZaepqK+xeHV4enV4prR+n6Smq3d5eXZ8fKmzp3+goaR5eXl6fH2ptamnhqOjf3t7fH99qrqura2GrHx7fH16f6q7sq2tsIc1YWFfXWFSaFBvcXJzZzdfXl1eUGhTbm1xc2hiNV9cXVJlUm5yc3NmZGI0W1tNY1ZwbXNzZmNkXjJZUGFTbm51cmZjY2FgLFJgU211cXhUU1ZSUVMtZICWl5mWb25wbGtnaFWnnp+ho1dWV1ZYV4axY6Wnra12dnd2dXeeo7J9oKKkeHZ5dnp7oaWypn2go3t5eXt2e6Oqt6urgqV5eXp5eH2grrasq62IMVxcW1xbTGNmTmxscGIyW11bXUtlY1Btb29lZDJZWlxOZ2RQbnFvY2BhM1dZTmNmUm9ucWNiXV0yV01iZFRvcG1iX2NhXC1RYGFTcXJxUVFSVE9VKGFpgI6QkWtsbGpnZWVSjKidoKNraWxqaGxulVSkmpukUVRVVFVYhrGsX6Srq3Jyc3V1d5WkoK18oqJ0d3V2dnmYp6SyqYOicHh2dnd2mamnsamqgC1aWlpZW0hgYGBKbGlhL1pXWltLYGBiTW1sYmMvWFZYTGRkYkxsa2BhXyxVVkxfY2JPbGxgYF1aLVNMXGFfTm1sYV5eWFksS1tdYVNsa01OTU9PTiRhaHGAiIhnaGhnZWVlUY2OqJyhZmlpa2ZobZBVjKSanmRoaGhoZ3aVkVijmZpMTk9TUVaGsLCsX6ipb3Nzc3Nzj6WhnLB/o3FxdXRzc5OnoqGwqX4pWFdXV1VEXl5bXUlmXStXV1RWR11eXV9IalxcKlJUVEVfX15fSmpeWlsrUVFIWWBfW0ppXVxZWilPS1tcX2NMaltaWlVZKExZXF9hUGlISUZJTU4fX2Zvd4CHZWNkZWFhYlCIiYupnWNlZGRjYGyNVImOpZtkZmVjZ2Jzjo5Th6KWZmZlZGZnfpOTkVajlkpLTU1PU4ayrqyuW6lucW9wb3GOpqGenrN8KVdXVlRYRV1gXV1eR18qVVRUV0dfYV9dYUlcXSpVVVZGXl5fYWBJXFxcKVFTSFpfXl5hTlxbWlopUEtZX2BfYU1dXllZVChLXFxeYV5QR0hHS0xNH11pbnd4gGdjZmJiXGJOhoiMj6xnY2NlY2Nri1CIiY2pZWZjZWZldJCMVImLpmRmZmZlZnyUkY9XjqVmaGhmZ2V9m5aVlFqnS01MTkxShrWyra+xYBFCQUNITVF5mJaXl5hESYyKioyOtJmZm5icQ5JIhoaIjbOXmJmZmUeUjUmEiouwmpmZmppKkI6NSIeLqpOWl5iaUZiTkY5MiaqTmJuXmVOampWSjkmpkJSYmpiAv7+9t7WvTqivsrK7oaaho5+fnLRwl5idop6koaGjnqC1oXGWmaCco6Cho6Shu6SfdZygnaamo6OkpsKlpKZ2oKCno6WhpKPEqaaoqXkgP1RXVllWPGBgYmNkPxNAQkRMU3mZmJiYmlhCSYSFiI60mpmZmJpaRI9GhIiMsJqXmZmbWkaOikWFi62Xm5manFtOk5CRSYirk5aamppbVpiTk5FJpZGTl5ycQIC9ure1rk+oq661tmWfoaOjnJyycZian6FnoaKjop6dtp9wmJqdaKOhoaGkoLqjoHWZnWWgoqKio6TAp6SjdJ5ppKKko6Wlwqynqql6Hk49WFVYVjpdYGJiYlEePVJSVlc9XmJgYWQ+Pw9ARExReZiUmJmYWVhER4OKirCamJqXmVlVR4xHhYmslZuZmphdVk2RikmGqJWYmZmXW1tSk5OOSaWPk5ebmUBCgLu4s69OqKmvsrVoZaClop2csW6VmZyfZmSfoaOfnLWfcJSanGRooKCho6C6pKB2mp1oZ6KjoqOkvKehpXagZmqioqWipMOppKepeSJPTkBYWFtAZGNhZGZWJVA+VFhXP2VkZ2RjVlMhO1RWWUJjY2RkZkNAPhVES095mpqYmptaWlhISIiNr5qbmZqdX15cTJJIiKmWlpubnGBdXFKVj0qnk5WYmp1CRUSAubSxT6qorbC2aGhoo6WdnbR1l5uhomdoa6KioKCynnWXm5xnaGujpqWgtaWgd5qdam1qpKWkprumpad7oG1rbaWnqKTArKinp3soVFdUQl5fRGdnZGpsWChPUEJaXEVlZGZoZ1dVJk9AXFlGZGRpa2hWVFEkQVlYQ2ZnaWhpQ0hCRBlJUnmam5ucnGNdW1pNSImvmJydn55hYWJdU5NNqZSYmp6dSEhHRoC2sleorK2ws21oa2ujop+zdZqdnKZrbWttoqOitaN5l5qdbG5sbaOnpLamo3ucom1vb26ipaa3qKakfp9vb3BvpKiqvq2mqKt/LFpXVlZFXkVnZ2pma1ktVVhXSmBJamtta2pfWitRU0NeSWpna2xrXVxWJ1JEWkhram1ra1tZWFUmQllGZWxsbnBKSENFRR1TeJqanZycY2ViYF1UTKqYmpqeo0pKTEtJgLRYp6murLBtbmxtbKOhsHWZm6GlbHFua26korKkepmdnm5xbnByo6e3qKR9nJ9ucXFwcaOnt6qmpX2gcXR0dHKoqbyuqKmmgC5ZWVlaW0lKamhra2xeMFhaWVtIS2pqbG5vYFotVlZaR01oa21sbV9dWixVVkhIaW1scHBdXVxbJ1JJSGhtbW5wYF1cV1gkR0loaGxvb01OSkxJSSF5l5qanZ1QUVBOTUuAW6eoqq6vcG5vcWptorJ2mZ6ho3Bxb3B0cKKupHmZnaBxcHF0cXSks6WhfJ+fdHV0dHh3qLespaiCoHJydXh0eKe5q6mnrIEyhIWGh4mKpauqpqqqjDODhYSGjKerp6isrYmJMX+BgoekrKqqq6yLi4Qwe4KHoqyrqausjIuEhC+CgqCqqqirrZCQiIiILoWcq6ytqq+QkouNiIovmqqtrq+xsbCxsKinpIDT1Nnd4LW0tLSzsbLd0s/S0dWytLGytLK14drOzcvQrrK1tLK3t+Ta1tDMz7G1tbS1uLfp3dbXztG0tri4tra479/a2d3RN2RkYWVjY1FSb3Jxdms7X2JgYWRUWXBydHdmaThdYGBhVVZvcXR3aGZkOVxeX1ZWbHBydWZlZ2Q4XGBVV25yd3VqaWdmYzNbU1lzdnN4Z2pnZGNhMFhYc3J3eVdXV1VXWFgsgJSVmJlaWFpcV1lZhmamo6iteHh0dXh4dZuufqKipXd2d3h6fn6hsKR/n6R5en58enx/oLWpp4Sjfn18fIB+gKO3q6mrizViX2JdYF5QZlFqbW5oNl9bYGBhUWZRcXB0ZGU0XV9bYFFoU29wcWZlYjVaXV1VaFVtb3FlZGNhNV1cT2ZWcXFwZ2djZGIyW1VkVm5yc2ZnZWZiYCxWYVdxdndQVFZXU1ZXK2uAjJGRbm9sb21nbXBWopqdnVRYV1hcWlmGq2OgpKdyd3R2d3Z4l6GrfZ6idXx2dnZ3e5eiraWEo3V7enp7fHyap7Ooq4UxXl5aW2BdSmFjTmprZDJdX1paXk1lYlBqb2NhM1lcW11NZmRObW9jYmIwVldbTmJjUnBvYGJiXzFXV1FfZVRtb2NkYmBdMlhRX2NUbnBiY19gXlwuV2BiV3RzTVFQUlJRVSZqc4CIimxrZ2lmZmlsUommm51oa2praWdrdZJVn5WaUVFUVlhaWYaup2CiqHF1dHV1cniRnpyrfp51dHV4d3l5k6CfsqmBLlpbWVZaV0dhX2FKamEuW1lWVlpJY2NgTWxfXCpXVlpXSmFgYUxtYV5fLVZVV0xiX2RPbWBfXFotVVdMX2JiUGxdXl5dXy1STl1hZFVsX2FfXVxYLFBeX2NWcE1KTU9PU1EiZ253gIdmaWdnaGRjbFGKiqSaZWVnZWZnZnOPU4ielmVoZWdpZ2x9ko5Xn5ZNT1FTUlVaha2oqF6lc3NzdXV1dY+hnJ2wfilXU1RWVFZEX11cXEZdKFVUVFZURV5dX2JIXVwqU1RVVUReW19fS1tcWyhSVFRIYF5eXEtaWVpZKVBQRlxeX15NW15bW1cnUExaXWFiUltcXFtZVihOXFxeYlNESUpJTE9QH2ZudXiAYmRkZWNiYGpQhImKomJkZGRmZ2Fzi1KEiaFkY2RlZ2Rmeo+LVImhY2dnZGhmaXyQjpBXo0pMSk9PU1eHq6mqqF4QP0FDRk1RWXqLjYuMQ0mLiYmQj4+2l5iZn0SSSISFioyQtJmYmZpEkIxFg4aLjbSZl5iYSJCRikiEiIuwmZaZlk+WkYyNSoiKrZWamZhVmpmTkZFHh6iUmZyYXpqXl5KSj0qlkZOZnYDCv8C8t7WyUKmtsLiRpaGgoqKdmrVtl5eek6WkoaOkoZ63n3OanpWko6GgpKKhvKSldZ+UpKSio6Kkp8Knqad4IT1ZVFZYWlg9YWFiYT0SQUNISVFXeo6Qj49bQkeIhoqMk7OYmpuZW0aOSIGGi461mZqYmlpIj4pJhIiLr5ibmZteT5OOj0uGiKuVmpmaXFSYk46NSIqplpaanFlgmpeXkZFLp5CUlps9gL/Au7a0r0ymq66zY5ajoaKgoJyycpaYnWOYoqGjoqGduaJ1mp1omaKkoaKmoLyio3adaZqkoKGkpKK+qKineSBPPFZYWlpZPV5kYWJUHz5VU1hbVj5eY2NkQT8TQUVJUVt5jo+OklpZREiCh4uMtJiZmZlbWEiLR4WJjK6ampqbXVxMjo5Gh4uslZmXmV5hVZGRjkqHqJOWm5xeXl+XlJOQS6WTmJibQECAvru3sq5SpaqusWZlmKOjnp6asnOXmZpnaJihoqOjnrWedZmcZmeYpKOipqC6pKF3nWpomaGjoaKmvqelqXkgT088VllYWD1gZWFkUx9NPVZXWVg8YGJjYVFQHz1QU1VZQWBgYWU8PT4RQ0lSWXmNjJCRW1dTRkWFhIuwm5iYmV1aV06PSYWKqZeZmZtcXFxTjo5JhamVlJuaXFxaXJSSjkujkJaYmj8/QYC4s7CtT6WqsLJlY2WYop2em65ylpifZ2Jol6GjoZuynnGanWdmZpegoaWiuaKldZ5qa2mYo6OgpLunpad3JVFTUz5bWltCZGFnZlciUFBAWFlbQmRkZWdVUyNOQFhXWkJjY2VnU1JRIj5UWVhFZWJjY0JBQj8WSk9YeY+PkJFgX1tYTEmJi62ZnpucXWFgW1ONS4qnl5mcnGBcXVpck5VMqJKZl5xDRERHgLayrlKpqqqwaWhpapqhoJuwdpeZnGprZ2iZpaKgsp53mZ9sa2lpmaSmpLemo3ucbG5qa5qjpqa7paeofSlVV1VVQl1fQ2NnZmhcJ1RWU0ZdXERlaGhlWVcnUFFDW15HZWpoa1pZViZSP1lbR2doZ2lZVVRSI0JVWkRkaGdpREhFQ0QbTlp5kpORk2JhYVxcVkuHqJOXn5xgY2JiXVySTqaYmZudSElITEmAsq9XpKmprGprbWptm6Kfr3eWnJ5rbG1ubpukobOje5ucbW5wbm6apqO0pKR7n29ubW5vmqiqt6mqp34sWldXWFhIX0ZoaGtrXStaV1VWSF9HZmlrbF5dK1NYV0dgS2ppa2pcW1opUFRFXElmamtrXVpaVShURl9Lamlsbl1bXFZVI0dZSmhpbWxKSUhHSUoeWXmRkpOUY2NjYmBeXU2mkpacn0pLTU9NTYCsWqKlp6hwcGxvcG2Yn693mJuebnBvbW9wmaCvo3qbnXJycnJxc5yitaakgZ90b3Jwc3Odp7Sopql+L1xbWFtcXEpLamxub2EvWVpYWlxMS2lqbm9eXS9VWFlZSU1nbWxvYF9WLVZZVklNZ2xvb2FfW1grVVdKTWxrbXBgYF5aWidUSktqb3BzYF5eW1taJUtOam9ydEtNTktMT00ieY+Tk5VNUFFSUVBTgFyhoqWobnBucG5wcpipeJicnm9zc3BzdHSbr6F5mJxwdnFwcnN4nbCmo36ddnZ1dXR3eJ21pqanhTGHhIOCiImKqKenqKmOMYKBg4WIiaarqqurioUzfH6ChYilqamsqoqHgzJ7foSEpqimqaqLi4J/MYCDhKGopqqpjIyJhoMxgIKgpqysq5CMjIiIgy6BnKuqq6+PjpGKioqJLZmpra6vr7OtsK2opaOAz9XZ3K+ysbK0sLKw3s/P0NGytLKus7S0tOHXz9DTsbOxsbKztrXl2tnQ07W0tLS0tbe569zd3NE4ZGJhYGJgZFRUbm5zazliYmBjYGRVVXByc2tpOWBhYWRmVlpycXVoaWc4W2FgYVRXbXFzZ2ZmYjheX2BVW3Bxc2ZpamZiNF9hWFp0cnNqaWhnZmQzYFpbc3Z3aGdqaGVmZjBZXXZ1e1ZZWlpWW11eMICMj49aWllcXF1cYIZnnp2idnp2dXd6eX2TpoGeonN5e3p4e3x+mKekgJ13e3x7eX5/g5mpqKaCOV9iYF5jXWBPZVFqb2Y0YF5eYV9fUmVRb3BnZTVdYV9eYVFnVG9xZWZkM1tcXWBUZFRxcGVnYWA0XF1fVGdUcXFjYmJiYzRcXlJkV3BxZ2VlZmRgMFtYZVtxdmdlZmRiZGEtXGVZdXZSVFVVVVZaXSpzgIiLaG1ubG9qaG93VJyVllJUV1haXV9fhqVhnZ50dXV2dHd7fI+ZpoCcdnh3enZ5eX+RnaijgTBcXFlbXl1bSmFhTWtkMl1aWlxeXE5hY09tY2IwWFlZXFxNZGVObl5fYC9VW1tbT2JiTm1iYF9hMVlZWVJjZVRuY2JhYV8wWFlTZGJVbmFhYl5gYS5ZUmRlWnJiYGNeY15eLldiZFt1T1FRT1VWWFomcHeAiWlraWlqaGhpeFCFmpRobGtoamtsbnyJVpqVUFNVVFVbXV+GpKNhnnJ4c3RzdHh8j5uYqH8tWVpZWVpYWEhdX2BLYyxaWFlaWVlGYGJiTl5hLFdYV1VXSWFgYk5dXFwsVFVZVkxeXmJPYFxdWyxWWFdMXmBiUWNfX1tbLVVVTmFkY1FgYF5aWlgtVFJbYWRWXV5gXVlaXCpSYmJlXUdMTk1PU1dXI3B0doBkZWZmZ2ZnZnNTg4ScZWlnZ2doaWp4iFKFm2VoaWlnaW1sfoyMV5xNT1BQVlZaX4akpaNgFkJERklPV15qeoWHiUdNi4iJkJKSkbScnZ1HlUuIhIuPk5C2nZydS5WPTYKJio+StJydnUuQj4dNh4iLjrWamZpQmJOQjE+FiY2xnZqcWJmUlY6PTIiJrpubmmGYmZiUk49Nh6uXmp1unJmalpWPkVCll5abgMHBv8C9tbWxVKyyto2lp6SmpKOhnrdyn6GQpqino6Wlo6G6p3WhkKiopKamqKmlwquteB87VVVXV1hWVztfXWA7EkFFRUtUW2J5hIeEXUNJhYeJjY+OtpqbnFhGjkmCiouNj7OZnZpaR5CMSICGioyymJqaXVCTjotKh4iLr5iYmVxXmJWPjUyGiauXmZlbXpuXko6OS4enlJqbWmmanJeUj49NpZKUmj6Av7+8t7Wwsk+orLBhj6KjoqWjn52ycp2fZpCioqKipKKfuKN2n2SRpaSio6Ojo7uop3ghTjtXVVdZW1o8X2BhUh89VFJVWVtZP2NjYT0+EUFES1BaYXmHhohbWEZJg4iLjJC0m5qcWlhHjEeChouKspmZll5dTZCMSYaKjK6bmJlbXlaQkI1Khoiql5qcXl1glJSRkE6LqJWYm15cZ5qWkpORTqaRlpk+QIC/vLm3sq9Qqa6xY2aQo6SjoKCdsXKanGNojqOioqWjn7WmdKBmZ5CkoqKhqaS3qKd3IlBQO1VZWFpXOmFfYVQgSzxSWFhXWj9iZGZTTh88T1VUW1Y/YmRiPT8+E0RIUVpheoWGiFpaVUhFhYaMj7KcmZtfWllNjUqHiouum5ibXWBeVJCMS4mJq5ecml5cXl2SlI9NiqeUmptfXlxnlZWQj02jk5aZQEBAgLy6tbKvUaSqrmRmZ46jpaGcna9xm55iZ2mPpaWjoZ+zonWfaGhmkaSmpKKgtqqmdiBPT045WlpXXD1hYWBQIE1OPVRZXFk/Y2NlVE4gSj1WVVhXP2FjYlFRTB89UVRYXUFgY2E+PT5AE0tOWGJ5hoiGX1lXVktGg4eIrJiamlxdWVZRi0mDiqqXmJlcXVxdXZGLS4ejlpmZXV1cXWWSj5FLo5CVmD9DQ0OAt7OvqlKjpqtmZmZlj6KfoJmscpugZWhnZ46kpJ+esaR2m2doaGmOo6GmobimqHsiVFNVUT5aWltAY2BiViVTUlJBXFtdQGNmZldVJFFPQllYXEViZmZYVE8iSkFVWVtFY2VkV1JRTyRAUlVXRWRnYUBFRENDFVJYYXqGiIleYVxaWVFKg4inmJ2aYWFgX1xbj02HpZiYmF1fYWJeZJKPT6KVl5lCSEZFSICzrKpVpaSpZm1rbGmRoKCdrnWanmdsaGtpkKWjnbCjeJ5qa25qbJCnpKO0p6d7K1VTVlZWRV5eRWNnZFopVFRTVkRcWkVlaGRYWShTVFRFX11HZWprV1hYJ01QRV5aR2dnalpYVFUoT0RbXUdmZmdYWVdWUiJGWltJaGhrRURGRUZIGVZheYmMi19iY19dXV1KiqaUmZ5iX2FhX11njU2jl5eYSkpISkxMgK+rWaKlpmxvampqbZCenap3mpxqb25wbm6SoqKvoXudbW1tbmxvk6alr6ekfitcVlpZWFZFYEdmZ2teK1lXVllZSmFIZWtrXFssVlRXVkdgSmZoaVtdWixQVVZKX0poamtcW1tYKVRVRVtNaGtuWl5aWVcoVEleTGpubV5dXllXViZMXE5qcW9KSUpNSk1RHmR5ioyMZWNlZGRgYGdPn5CWmUpPTU1QU1CAqVqdoKNpcG5ubHBvj52ldpmbbG5ucG9wd5OfqaN8nHBzc3Jyc3iWo6+lpX0yW11bWlxaW0lKaWlqYi9dXFtcXltLTWlpbmJgL1dbXFldSk1tbm9eYV8wVllbWk5OaWprXl9ZVy5WWFdLUWtrbWBfXlpaLVdXT05sbXBfYV9fWlkpWE1TbnFzXmBgYVxbWyVRVG1wdEpNTVFPUFBWIXmIh4xOTVBQVVVUVoBdmZmdbW9wcG50b3KQo3aXmXBzcXBycXZ3kqSheppycXNzcnJ0fJSoo6J+L4aEhIGGhomHo6inrIoyg4J/hIeIh6iorKyMhTF+fX+ChIilqaqqiIeCMnl9gYKHoaWqrIaGg4AweX2AhKCppqaMi4eEfTJ8f4OiqqeqjI6Kh4aBMICCoKesq46Pj4qGhYYxgZyqrK2SjYyNiYiIhzCYq6+sq7Cvrq2qpqWigM3S2LKysrGysrSxs9rQ1tW0srKysrC1tbTf38/WtLS0r7Kztra25eDf0ThiZGJiYWBkYlBQbW9qOGJjYWNhY2RTV3JzaGk6YmBhY2RgV1dzcmdoaDphX19iYVZXcXRoZWZmOFxfY2NYV3B1aWdmZ2Q2YGFfVltyc2hpZWllZjhfX1tceHZpZ2toaGZmMl1fYHd7aGloaWhpZ2cwYWN6fFNXVltcWl1iZjKAh4pUWVtaXV9iZGiGZ5aYdHh6e3d5fYCBj52AmHZ6d3l7e3+ChpGgnoQyXl9eX15bXWFMZExuZzRfX11gX2BgUWZWcWZlNFxdYF5eXVJkVG9jY2M0Wl5eX15RZ1ZwY2JiYTRcW15gWGdVb2dmZmRiNV9gX1dnWnFkZGRkYmI0Xl1UZl10ZmVlZGViYjRdW2phdmhnZmdmY2RjL2JqZXtNU1FVWVtaX2YteICHaW9ubm5vcHFzfVaUi09WV1VbXF9haYWeY5d1dnZ1eHl6en+Qk56ALVxbXFpcXF1ZR2JgTGMuXlxZW2BdW01lZFBjZDBZWVxbXVtNY2VOZGBiMVlbW1tcTmVlU2BgXV8wWFtaXFBjZVFiYGBiXy5aWltSZWVWYmRgYV1iMFtbVGVpWV9iY2NiYV8vWlhlaV5hYmVgY2FhYS5daWtjSU9OUVRWWVxiJ3V4gGhramtsbm1rbntWgJRmaWxrbGtwb3F8hViUTVFRVFdZXmRqhp+gYRNDRkNKTlddZWh4f4FETImPipCOjpCUuJ2eRpVIhoeKjI+Pk7eankiTkUuEh4iOkZS1m51KlI+NS4WFi42Ss5yZT5mUj41MhYiIkLWamluYl5GRjk6Gh42zmZtjl5uYk5GOUYiNrpqbbJyYmJWUkZBNia2XmnKenJuZmZOWkk2rlpeAxL+/vsC7ubW1VbS0h6alpKWjpaCinrx1oYqkqKWlpaSmo6G/rHgfOlRVVVVYWVhVO11fORBAP0NKU1pjbHmAgVhCR4iHi4yRkY+0nJpXRY1IgoWKj42Os5qaWkiMjkeChouOj7KWmV1Nj4+KSISGiY+xl5pbVJWRjYpLhomNsZmZXFyXl5GOj02JiK6XnFpnl52Uk4+MS4Wrk5ZacJmZmZKQj5BNppCUO4C+wby/ubaysFKqsWKHpaWipKKenZm1cqFjh6Slo6OipaGeu6d3H085V1NYVldZVDxfX1EgO1VTWVlYWldAX2E8PhFCREpRW2FqeYCAWVhFRoKGh4yNj7OZmlpXRopGgISMjY+zmZlcW02PikeDhomMspiYWl1UlI6LSoaGjLCamV9eX5STkY5KiIurmptbXWeXmJKQjE2JqJSYWF1vmJmUlZGPTaSRlUBBgL2+vLe4s61Rq7BhZoipo6Ckop2atXSeZWOJpKKjoaahobeodiFQSzpWV1ZYWlg9X2FTIUs8VFVYV1lYP2JgUU8fPVFTV1dYWD9iYTw9PhFDSFFYY2p5gYJaVlRFR4SIi4+Qs5mbXllXTIpIgoSLi7Gaml5cW1WNjEiFiYqsm5leXl9cko+LS4eJqZiaXl5eaJeRko9RiqeXmFtcXHGak5WRj06lkZRAPkKAvLu5trKsUqmtZWdnh6Ojo5+hmrJ1nmdmaIqkoqOgoqC4qHkgUE1MO1hXV1pXPmBeViFNTDtVV1hZWD9jYlNPIUs9U1dXWlk+YmJRUEwgPlJVV1lYQWBiPD4/PxNJTVZjbnmDgl5dV1ZMSIGFioyvmJhdXVxXVIhKg4WKrpmaXF5eWVyNjk2FiKeWmFxcXV5mkZCMTIillZhZXVtccJaVk5FNopGTQUNBQ4C5trKwq1GprWVoZ2iIpaWfnp2zdpxnZ2loiaOko6Oft6Z2HlFMTk87WFZYVTxfX1MgTlBMOllYXFc+X2NSUx9LST1VWVhaQGBfUFBOIEo7U1dWWEJiZFNRT0seP1BWVVdDYl09Pj5AQBJOVl1oeX6BW2BaWVZRSYKEiKmYmVtbXFpYXItIgYmlmJtbXVxcWmSPi0uFopSXW1pcWl1uko+LTaCQkT9AQ0RGgLWwrKlQpahmZ2ZoZIWinpybrnKcaGlpZmeIoaGfnLKndyNSUlFTUT1YW1lCZGFXJFFQT1RBXFpaQmVkVlUlUlBQP1pcWENmYlZWUyRJTT9ZWlpCZ2dUVFJQI0tAVVdZRWRjVFRTUVAiQVVVWEhnZj5EREJGRRZWXmp5gYNeX19fW1hbSIGHppOZXl5cXl1bZotLhqCTllxcX15gX2+QkEudj5JERkhGSUqAsKqlVqWkaWxsamltiaCgmbF5nGdqaWhqaouioJ6wpnknVFZUVFRVQFxbQ2RnWihSVFVVVERcXERmaVlZJ1JTU1NGXVxGZmtXWVgmUVNSRGBbRmZmWVlXVShQTklbXUpoaFtWV1RUJE9EW1tMaWhYWVVXVVMjSlpbT2xrREVFSklITBteaHmChWFiYWRfXl9kS4KgkZVeYF9jX19hcI1Om46URklHSU1PT4CqpFieo2tsb25rbXCJnJmoeppsb25vcW9vjJ+crqF8K1dYWFRWVllGXEdnaV4tWVhVV1pWSV5KaWtdWytXV1RXV0VfS2lpXFtbKlZUVlVJXkpra1tbWlcqUlRWSWBOaWpdWlxXVilTVExeTmlrXFxbW1lXKVZNX09sbltcW1pZV1olT15RbXBIRkpNTUxQUB5seYOHYWJiYmZiYmJvTJeMkUpNTE1PU1VVgJ9YmZprbnFub3FxcomVpHiZbHBxcHFydHmMmaWifCxcW1taW1lcXkZGZmpgL11aWVxcW15MTG1pXl8vW1taW1pXS05obF5hXjBXWVpbXU1Oa2pgX15bMFNXW1pMUmxqXF9eYFkwV1haTlRpa2FhXmFdWytYWVJTbnBgX19fXFteKVtUWHF0YF1hYWFcXF4oWVp2d0hNTlBTUVVaXCV5goRKT1JTVFZaW2CAX5WUcnBwcHBydXd6iZp3j290cXBzc3Z4foyenHwuhYGCgYKEhIeDoqipiTCAfnyAhIOFhaOoqomGMHx4fX+GhIWkp6iHhoAxenp/g4SDoqmoiIOBgjF5fH+DhqGlqYqHg4J+Lnh6gYOjpqiKioqGg38ueYKDoKmoioqJiISCgy+Agp+oq4yKio6IhIWGMH6eqa2NjY2OjYqIiYkvmKmpqq2ura6vqaenoIDT2LCyr7KwsrSysbHgztWxsbKxsbKztbO15d7NL19dXl5fXmBeWkpMbWYzXWBcXV9gYF1RT21kZDVbW1xfX11bUFNtZmJjNF5dXFxhYFNTcGVjZGI2XVxdYV5TU3BnZGJkYjNaXV1fV1dwYmhjYmJdM1xfXVdccWNmZWVjY2AzYGFdYHZlZWZlZmRkZy9hYmV6YGJlZGRlZWZoKWlrf0tVVFZWWlphZmosgIlRVFdWWl5gY2hwhmKLcnh2d3V2eYGBiI+QfytbWlpbXFtcWlVEYUhkL1taWVtcWVxbTGVNYmEyWllaW1tbWk1jUmBeXTBYWVpaWltOZU5hYmBeMFhZWVlcUGFRYWJgYF4vW1lbXVNkVGJjXmBfXy9cXF1WaVpfYmJiXWBgMFtdV2leYWJjYmBjYmMsXWFqZF5gY2FfYWNkZipndGtLTk9SUldbXGVrJ3aAZWpqamttcHJyeX9TiE1RUVVWWF1jaG+GjWMSQUFDSE9TXGVpcnl/Q0qNi4mNj5CQlJW4nESSSomHio2OjZKTt5xGlI1Lg4SLiZCRlLacS5OQjUyFg4mMkpC0mlSYk5COTISIh4+Utp1ZmJOQjItMgISLkLWZYpqXlZKRi06Gio6ynGqXmZiTko2PToyLr5pvmZydmpiVk49Li7CZeJ2empqZlpSUjU+umoDCwb3Bwb67ubi6VraHp6elpKOipaOgosV3HTlUVFJaVlRWU1Q8XDoPPUJDSFBaYmhweYBaQEWFhIqKjpCQkbScWESORIGFh4uOjo+zm1lIj4lGg4aIi5GSsZpeTpKPi0eDhoqLj7KWXVaSkI2MR4SGiIy0l1lfmJKQjopKhYOKsJhbZpiZlJGNiUyGiqyXWW+XmJeTkJGMTYeplll4mZiXmJOTkY9Nq5U9gL2/vbq+vLiztFGwYYiloaCgn6OfnJ+/ch5NOVRTWFdXWVNTO2BPHjpSU1hXWVhXVjxhOzwSQkJJT1hla295gltZQ0aBhIiLkI+Os5pWVkeJRYKFi46Pj7SXXFxNjolGg4eKi461mlxeVZCQi0uEhoqMspdZXV2VkI6LSoGJi66YXF1nmZaPjY5OhIqqllddcZaYl5GRjk2FqJNaWneYmJmTkI6PUKiVPkKAwL+8vbq2tLZSsWJlh6SioaCkoJ6bu3YeT0s7VllWVllXVTxhUh9MO1NYV1VZWFg+YFNPHjtOU1ZVWVZaPmE7PT0PQ0hPWWFpcnl/WVVTRUeEhIqKjpCzml5bV0yLR4KHiYyPsZpbXFpUjotJg4SJjLKZXF1cW5GPi0uDiYqsm15bW2iWkY2PToWJq5ZYXVxwmJSPj49NhKqUW1pWeJeXlZGRj02plUJAP4C7vLq2ta6yVK5kZmeHoqOioKKenbl5H09QSzpWV1laVVg8X1AgTEw8VllXWFlZPWFSTx9LOlRWWFlXVz5kUU5LIDtRUVlXV1dAYTk7Pj8RSU5VYGpweYFeWlhUSkqBg4mNka+ZXFtaVk+NR4CJiYywmFxdXVpdjodKhYmKrZdfXlxfZpGOjU2Hi6qYXF1dWnGWkZCNTYikk1pdXFx3m5aUkI9PpZQ+QkBEgLm5trSvr1WsZmhoaYejoqKinZ22eCBQTU9POVVWWlNXPltVIE9OTj1YWVhYWD9jVFIgTUw/UltXVlk/YlVSUSBLPVNUW1tZQGJRUE1LHz5PVVdYWUFgPT09PkESTFZfa3F5gFlcVlVUVEiChIaMrJpbXFxbWlyIR4OIjaqZW11dXltljIxMhIikllpdXVpbb5GPjk+Go5RcW19cWnqSko6NTaGSPkVDQ0aAuLKvqq1UpmVraWZmiKGin56cs3cfTk5QTVA6VVVXV0BiUx9NTlFNO1RZV1g/YlRTIUxKTD1YVllaP2NTUlMeTEo9V1dWVUNjT1FRTR9KQFVWV1dDY1FUUk9NHEJSVVdZRWA9PD1AQEMRVVxncHmCWVtbWVlYV0iAhIelll1ZWVpZWWOHSYOEopJaW1pcW1ptiIlKgqCPWl1bXFpddo+Oikufj0FBQkVGR4CurKeoUqRmZWdqZmeFoJ2bma1zIlJSVU9RUDxZWFg/Y1okUVBTUVI+XFlbRWVWVCJPUFFSP1hbW0FlVVVTJEpNTUFaXFpEZFRVUVAkTk1DWVpYRWZTVVJVUSJKRFdZW0pnVFZTU1FOIUVVWFpNZD0/Q0RISEgWX2hueoNeX19dW1xdYkqBg6CTXF1cXmBcXWyISn+ekF9hXWBgYV92jYhNnI1EQ0VJSU1RgKmkpFWgaWpra2trb4qdmJivdyZVVlVUU1dWQlhdQ2VYJlZTU1RUVkFdXkVmWVcoVFJUVVdDW19GZVhTWCRPU1FUQVtaRmdYWllUJFNQUUVbW0hoW1hXVlQkUFFKXF5LZFdXV1dXVCVRSFteUWlaWFhZV1VTIkpdYVJvQ0NFRkhLSk8aZ3B5gV5gYGBhYl1gbUt+lo5dYmJeYWNfY3aFTpeNRkdJSktQU1aAnqFYmWltbm1tbG51ipOUo3gnWFlWVlhXWFdBXUNnWilXWVdVWFdZQ2BIal1bK1RVWFlZV0hhSGpeWlktVVdWWFdKYUxpWltZVypWVVhYS2BOaFtcW1taK1hVWU9hUGlgXlxcWVgrUlRNY1NqW1teWllZWilWUmNXcVtdW11ZW1lZJVhmW3NFR0pMTk9QVlsgcHqDYWZlZWJkZmZqdk6PhkdMS1FQVVhbYYCYWpJtbm5tcHFxeHyIj5t4J1dVV1ZZWFZVUj9DZVsrVlZUV1ZaVldER2haWylVV1VTXFhYRUloWl1aKVNVVFdXVkdLaVxbWlgpU1RXWFlMS2lZWl1ZWitPVFlYTUxpWlxZWVlWKlJUVk9Ra1lcWlhbWlcoWFpUV29aXF5aXFtbXCZbWVxzWFxZXVtcXlxeIGJhekNKSk1MUU5XW2UfeYBFS0lNUFJXW15ngFqGbG5ub29vcHd5gYqMdy+Bg4CAgoGFhIODn6iKMXt8e4GAgYKDhaKoh4Uwe3h7foGDhIWhpYiHgDB2fHuBgIGDoqaGgH97L3l7fYKDgqOliIeDgXwweHt+gYOgp4mGhYOAfy95fXyApKWJi4mEgYJ9MXt7gaGoiomIioSEfoEvf3+eqIqJi4qJh4SDhTB/nKeKjYuKiY2GhYeIMZ2sqa6tq6qrraqnpaWA17KyrrCwsK6xsrKx480sWllYWV1ZWVxVWEdKYDBYWVpZWlxdXFpLTmFfLVhXXVhYXVpcS09fXl8xWVhbWVxZWUtOXmJfXi5bWlpaWVxRUmBjYFxeMVxZW1xeU1RfYWJfYl8uU1pdXFZYX2FfX2BfXy5cXGFaXGBiYmFjYGBiLGJjYWNeYF9gZGFiY2UpZ2hrXl5hYWNjY2VmcCp0d0lPTlFTWVtfZm15KIBJT1FUV1lcY2dtfoZhEj0+QUdOUltkbHFzekJLiIyIio+Oj5KSlLZGlEmHhouKkY6Qk5W2RZOQR4OHiouMkJORtkiPkI1Ig4aLi5CRkLRTlpSPi0uFhomQk5O1WJmVj46KTIOGj46RtF+WmZKQjo1LgYqKjLVrlpWVk5CLiUqIiY2yb5uZl5iVko+NS4mKsnWcmpiYl5iTk5BOjbJ4np2bmZqZlpaSk022gMLDwcK+wMC7vL29Whs3U1NSU1hVVFNUVTs4Djw+QkdRVmFpcXF5Vz9Eh4WHjIuMjo+PtVpCj0eDhoeKj42QkLRYRoyJRIGHiYuOi5CyWkqQjohJg4WFio6RtFxUmI6Pi0mEhoeOjrJYW5WUkIuNSYKEi4yzW2WXlJGRkIlLhIeHsFdumJeXlJKMjkuFia5beJyZmJaVkI+LToeuWHeamZeUmpWSkZFNsD2Awb69u769u7a4uFQdTDhUV1pUWFdTVVY6UBs4UlBTW1lWVlVXOjk6Dj9BSE5WYGhwcnlWVkJEgoOIi46Nj420WFVFikaDhIeLjo6PtVtZS42LR4SFhYqPkLJaWlGSjYpJg4WJipCzXF1dko+LikeDhYqMtVtbZpaVko2KS4OIjK9XWm+Zl5GSjIxLiImuV1t2l5aWlpGOjk2JrlhaeJiXlpiUkZGRUa48PoC/vr2+vrmzt7dVH0xKOVNYWFhaVFVVPk4eTDhSV1dWWVlXWD1RThs6UFRUVlhZV1Y7Oj08D0BGTldgaW9weVpUT0RCg4OJi4+RkLBcW1dLjEWDgoqNjpCvW1xaUo+JSoKGiYuPsVpbXVqQi4dHg4WHirBdX15nlJGPikuEhYuvW1tbbpaVkY2MUIaKq1paW3WXmZeQj49OiKpaXlt4lpmVlJKSkE+rPkFAgLu8uru4tLW3VB9OTEs4V1ZWV1dZVj1QHU1JOFdaVVhXV1pBUU0dSDpUUlZWWFlXQFBNTR0+UFNUWFdXWD86PDw7EUhOVF5rcHB5XldaU0tHgYeHi5CPrlxeWVZSi0qFh4iMkLNeXFpYW42LSX+EiIqwXF5cXGWQjItLhomMqVldXVtxk5ONjU2Eh6haXF1bdpiVjo6MToqpW19dXXiZmZSSj5BPqD1CQUSAuLu6t7OzslUfTU1OTzdXVFVXV1Y+UR5QTU49WVdYWVlZPlNSHUdJPFZaVVhXWT9QT04gSDxSV1hXWFhATk5PTBw9UVNVV1lXQDk8PT0/EU1VXmhycHlZXllWVU9IgIKJjI6tW1pdV1dXh0mBg4aKrF1bXlxcZYyISoGGi6lZXF1ZXG+QjI1MhIamWlxcXVx3lZCNjE2Jp1xfXlxcd5iUk46QT6ZBREJDR4C4t7Kur7FVHlBPTk1NOlZXVFdVO1IgTU5PTDtWV1VYVzxVUyBLT0w9VllWWFpAT1JPIEpLPVRYWFhaQVFRT00eST5TVlhVWUNUUFFPTR1CT1RVWVhHOj4/P0FDEVVfZmxxeVxaW1tVVlhHf4OGiqhbW11fWVdih0iAhoelV1xeW15YbIeLSYCFoVtdXlxbXnSQi4lMhqJdYF9dXV56kJGOj1GjP0FBRURHgLOxq6mtVB9PTk5LTlA5VlVWUz5SHk1MTExOPFdYWFY+VVMeTUtNTTtWU1pYP09QTx9KTEw+VlVXVUBTUk9MHktJP1NXWVdDVE9RTUwcS0BUVlhYRVRPUU1NTBxEUVZYWUo7PTw/QUNGEFxlbHB4WF1ZW1lVWGJGfICDoFZcVl1ZW1lpg0l9hZtZWllfXF5dc4aHSn6cWlxbX11dX3WKh4hOnD9CQURFSEyAqKakplQjUVFST1JRUj5YVlhCWCJSUU9PUE88WFlaQ1VWI09PUE5QP1tZVkFUU1EjTU9PUUFXWVpFVFFSTx9NTk9AWVpbRlRWUlNRH05NQlhbW0lVVVZVUVIfTUlYXV5NVlNWU1JRVCBIWF9eVD1BQURESEtKFGZucHlaXFtfXlxaXGtJeYCVXF5eXVxgX2BzgUx+l1xgX11dYGJidYOGTZhEREZHSE1OV4CfoaFVI1VSV1FVU1NUPlZZQVgmUVZSVVVUVEFbX0VaWChRUlFUUlJEW19FVVpVKVBTUlRVQ11bSVhXVlUnUFVTVEdaXUxYWFlXVSZTVFRJXWFLV1tVWFdVKFJTTl5hUllYW1dZV1YlVExgY1ZYV1hYWlZXWSNWYmRbPURISUdLUFBXGm5veV5hXl9gY2FjZnNKd5BfY2FhYmFkZ2x3fk2SQ0lMS0xRVFlggJiYWiFUVVVRVVFTUVE7Vz5YJVNTUVJWVFNWQVxEWFkmUVBUU1FTUkJcRVhXViVQU1VUV1NGW0ZWWFZUJlBTVFRWRl1JVVlXVFQlUFRTU0pgTFdZVldZVCZSVFZPYVBXVVhYV1ZYJlZXTWJVVldaWlhVWVkiV1dnWlRXV1VZWFhaXB9fbGBAREhHSE1PUVphGnB5XWBkYmJjZmdrcHVOgUJHSEpMUFZbXmeAh1kjU1FQUlNQUlFOUDs9VyRTUlJUVFNTU1JBQlhVI05TUU5SUVNVQUdWWFUiUFFRU1NTUUJFWFVTVCdRUVFTU1JER1ZWVldVIlBQUlVVSEtVV1hWVlIjT1JVVkxOVlZWWFRZUyJUVFZPV1hYVlhXWFZYI1lcV1xSWFhZV1hbWl0gYWFfU1hXV1lYWV5dYyFvcjpAREZJTFJQXGRzHHlCR0hITU5SWV5neIBXL4F/fX+AgIB+fn+BnYkxfXx7fIF+gIGCgqOGgy54dnl+f3+AgoCihYF+L3V6eX1+f36CoYOCfnoudnh7fn+AgKCGg4N+fC93eHyAgYChhoSDgnx8MHh3f4GDn4aFhoSAf34udHp+gaGHhoaIgoGBei59foCfh4eIiYSEgYKBLnt/noeIiYaJiIaDg4MygJyIjYmGh4iMiIeHiDKepauqq6qqq6uqpaaogA==";
+const ORDER = [0, 14, 28, 42, 56, 70, 84, 1, 98, 2, 13, 3, 26, 4, 112, 39, 15, 52, 5, 16, 27, 17, 6, 126, 7, 40, 65, 29, 18, 53, 78, 9, 8, 30, 10, 91, 41, 19, 11, 140, 66, 43, 31, 54, 104, 117, 20, 12, 130, 21, 32, 79, 44, 143, 22, 67, 55, 92, 23, 154, 156, 33, 57, 45, 105, 24, 80, 34, 68, 25, 118, 35, 58, 46, 131, 93, 36, 81, 69, 168, 144, 37, 106, 71, 47, 59, 157, 38, 119, 48, 82, 94, 72, 49, 132, 60, 83, 145, 50, 85, 95, 107, 73, 51, 158, 61, 120, 62, 86, 96, 133, 108, 74, 63, 99, 146, 97, 64, 109, 87, 159, 121, 75, 100, 134, 76, 110, 113, 88, 122, 147, 77, 111, 101, 160, 123, 127, 114, 89, 135, 124, 90, 148, 102, 125, 128, 115, 136, 161, 141, 137, 103, 139, 138, 129, 116, 149, 162, 142, 150, 152, 151, 155, 153, 163, 165, 164, 166, 167];
+// ======================= DATA =======================
+const EQ = Uint8Array.from(atob(EQ_B64), c => c.charCodeAt(0));
+const eqAt = (a,b) => EQ[a*169+b]/255;
+const RN = 'AKQJT98765432';
+const COMBOS = new Array(169), CNAME = new Array(169);
+for (let r=0;r<13;r++) for (let c=0;c<13;c++){ const i=r*13+c;
+  COMBOS[i] = r===c?6:(r<c?4:12);
+  CNAME[i] = r===c? RN[r]+RN[c] : (r<c? RN[r]+RN[c]+'s' : RN[c]+RN[r]+'o'); }
+const PCT = new Array(169);
+{ let cum=0; for (const i of ORDER){ cum+=COMBOS[i]; PCT[i]=cum/1326; } }
+function topRange(p){ const set=new Uint8Array(169); let cum=0, n=0;
+  for (const i of ORDER){ if (n>0 && cum+COMBOS[i] > p*1326 + 2) break; set[i]=1; cum+=COMBOS[i]; n++; }
+  return {set, combos:cum, p:cum/1326}; }
+function classOf(a,b){ const ra=a>>2, rb=b>>2; const hi=Math.max(ra,rb), lo=Math.min(ra,rb);
+  const H=12-hi, L=12-lo; if (ra===rb) return H*13+H; if ((a&3)===(b&3)) return H*13+L; return L*13+H; }
+function eqVsRange(h, set){ let s=0,w=0; for (let i=0;i<169;i++) if (set[i]){ s+=COMBOS[i]*eqAt(h,i); w+=COMBOS[i]; } return w? s/w : 0.5; }
+// all 1326 concrete combos
+const CMB=[], CMB_CLS=new Int16Array(1326), CIDX=new Int16Array(52*52).fill(-1);
+for (let a=0;a<52;a++) for (let b=a+1;b<52;b++){ const i=CMB.length; CIDX[a*52+b]=CIDX[b*52+a]=i; CMB_CLS[i]=classOf(a,b); CMB.push([a,b]); }
+
+const RANKS='23456789TJQKA', SUITS=['♣','♦','♥','♠'];
+const rankName = r => RANKS[r]==='T' ? '10' : RANKS[r];
+const r1 = x => Math.round(x*10)/10;
+const num = x => String(r1(x)).replace('.',',');
+const fmt = x => Math.abs(x)<0.05 ? '0' : (x>0?'+':'−') + num(Math.abs(x));
+const pct = x => Math.round(x*100)+'%';
+const rand = n => Math.floor(Math.random()*n);
+const pick = a => a[rand(a.length)];
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; };
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const $ = id => document.getElementById(id);
+const clamp = (x,a,b) => Math.max(a,Math.min(b,x));
+const ABORT = {abort:true};
+
+// ======================= CHARACTERS =======================
+const BOTS = [
+  {name:'Дядя Слава', short:'Слава', ini:'ДС', pic:'slava', gen:'Дяди Славы', emoji:'🧔', tag:'коллирует всё подряд', base:.48, shove:.6,
+   pf:{open:.55, call:.45, tb:.03, c3:.35, cai:.3}, pp:{val:.55, bluff:.08, rb:.08, base:.1, slope:.5, commit:.15, raiseT:.95, size:.5},
+   call:['Колл, чё. Карты-то разные бывают','Олл-ин? Ну давай, давай','Да я с этим в гараже всех обыгрывал'],
+   fold:['Ладно, живи пока','Фолд. Но я запомнил'],
+   win:['Ну я же говорил!','Учись, студент','Гаражная школа!'], lose:['Да это рандом, чё','Пересдай!','Карта не пошла…'],
+   idle:['Ну, жми уже','Я тут до утра сижу','Чё думаешь-то?'],
+   bet:['Ставлю, чё','Плати давай'], raise:['Рейз! Гаражный стиль','А я вот так!'], check:['Чек. Посмотрим','Чекаю, не торопись'], shoveTalk:['ОЛЛ-ИН! Чё, страшно?','Всё на кон, по-гаражному'],
+   tip:'Дядя Слава коллирует очень широко: фолд-эквити мало, поэтому пушь руки посильнее — зато он оплатит твои сильные пуши.',
+   tipShove:'Дядя Слава пушит с чем попало — против него можно коллировать гораздо шире.',
+   tip2:'Слава почти не сбрасывает: блефовать бесполезно, зато сильные руки ставь крупно — он заплатит.'},
+  {name:'Студент Паша', short:'Паша', ini:'СП', pic:'pasha', gen:'Паши', emoji:'🤓', tag:'нит, ждёт тузов', base:.09, shove:.1,
+   pf:{open:.12, call:.08, tb:.03, c3:.05, cai:.04}, pp:{val:.78, bluff:.02, rb:.02, base:.55, slope:.5, commit:.25, raiseT:.93, size:.75},
+   call:['Я посчитал. Колл.','По таблице это колл'],
+   fold:['Фолд. Вероятность не на моей стороне','Подожду тузов'],
+   win:['Математика не врёт','Как и предсказывала модель'], lose:['Это не входило в мою модель…','Дисперсия, сэр'],
+   idle:['Считаю шансы…','У меня всё по формуле','Минутку, строю дерево'],
+   bet:['Ставка по формуле','Ставлю. Обоснованно.'], raise:['Рейз. У меня всё посчитано'], check:['Чек','Пропускаю. Пока.'], shoveTalk:['Олл-ин. Это оптимально.','Пуш по таблице'],
+   tip:'Студент Паша фолдит почти всё — против нита пушить можно гораздо шире: блайнды достаются бесплатно.',
+   tipShove:'Студент Паша пушит только сильные руки — для колла против него нужна рука ещё сильнее.',
+   tip2:'Паша сбрасывает всё без сильной руки — давить ставками выгодно. Но если он сам ставит или рейзит, у него почти всегда есть.'},
+  {name:'Бабушка Зина', short:'Зина', ini:'БЗ', pic:'zina', gen:'Бабушки Зины', emoji:'👵', tag:'обожает картинки', base:.30, shove:.35,
+   pf:{open:.38, call:.3, tb:.06, c3:.18, cai:.1}, pp:{val:.62, bluff:.12, rb:.4, base:.28, slope:.6, commit:.22, raiseT:.94, size:.66},
+   call:['Ой, какие картинки! Колл, милок','Король — мужчина серьёзный. Колл'],
+   fold:['Такие карты я в 90-х видала. Пас','Пойду пирожки проверю'],
+   win:['Бабушку не обманешь!','Вот так, внучок'], lose:['Ох, давление…','Ну и молодёжь пошла'],
+   idle:['Ты покушал бы сначала','Ходи, внучок','Не торопись, я подожду'],
+   bet:['Бабушка ставит!','Ставлю на пенсию'], raise:['А я подниму, милок'], check:['Чек, внучок','Пропущу, давление'], shoveTalk:['Всю пенсию на кон!','Олл-ин, милок!'],
+   tip:'Бабушка Зина коллирует выше среднего — мусорные пуши против неё дорого стоят.',
+   tipShove:'Бабушка Зина пушит с картинками и тузами — колл с крепкими середняками часто окупается.',
+   tip2:'Зина любит блефовать на ривере: её ставки на ривере можно ловить шире, чем обычно.'},
+  {name:'Артём-рег', short:'Артём', ini:'АР', pic:'artem', gen:'Артёма', emoji:'😎', tag:'играет по чартам', base:.19, shove:.25,
+   pf:{open:[.16,.2,.28,.42,.45], call:.18, tb:.06, c3:.18, cai:.08}, pp:{val:.66, bluff:.18, rb:.2, base:.1, slope:.7, commit:.18, raiseT:.88, size:.66},
+   call:['Стандартный колл','Ты тут слишком широко пушишь'],
+   fold:['Стандартный фолд','Не мой спот'],
+   win:['GG. Стандарт.','Чарты не врут'], lose:['Кулер. Бывает.','Ну, я в EV плюсе'],
+   idle:['Таймбанк тикает','Решение, бро'],
+   bet:['Ставка. Стандарт.','Ставка на вэлью. Или нет.'], raise:['Рейз. Балансирую диапазон'], check:['Чек','Чек, контроль банка'], shoveTalk:['Пуш по чарту','Олл-ин. Стандарт.'],
+   tip:'Артём-рег коллирует «по учебнику» — это самый честный спот, ориентируйся на базовые чарты.',
+   tipShove:'Артём-рег пушит по чартам — опирайся на чистую математику шансов банка.',
+   tip2:'Артём играет сбалансированно: и блефует, и ставит за вэлью. Решай по шансам банка.'},
+];
+const REGS = [ {name:'Рег',short:'Рег',ini:'Р',pic:'reg',tint:'#7a1f2b',tag:'обычный регуляр',base:.17}, {name:'Тихоня',short:'Тихоня',ini:'Т',pic:'reg',tint:'#2e6b45',tag:'молчит и ждёт',base:.10}, {name:'Рыбка',short:'Рыбка',ini:'Ры',pic:'reg',tint:'#3d5aa8',tag:'любит поколлировать',base:.34}, {name:'Шарк',short:'Шарк',ini:'Ш',pic:'reg',tint:'#24201c',tag:'опасный игрок',base:.21} ];
+const MEGALODON = {name:'Мегалодон', short:'Мегалодон', ini:'М', boss:true, gen:'Мегалодона', tag:'хозяин бездны', base:.25, shove:.4,
+   pf:{open:[.26,.3,.38,.5,.55], call:.26, tb:.1, c3:.22, cai:.12}, pp:{val:.6, bluff:.3, rb:.35, base:.15, slope:.75, commit:.15, raiseT:.82, size:.75},
+   call:['Плачу. Посмотрим, кто кого','Колл. Здесь моя вода'], fold:['Отплываю. Пока','Не сейчас'],
+   win:['Бездна забирает своё','Ням'], lose:['Неплохо для малька','Ещё увидимся'],
+   idle:['Тону в ожидании','Решай, рыбка'], bet:['Давлю','Глубже, ещё глубже'], raise:['Рейз. Добро пожаловать в бездну'], check:['Чек','Затаился'], shoveTalk:['Всё в бездну','Олл-ин'],
+   tip:'Мегалодон играет агрессивно и часто блефует — ловить его колл-доном выгодно, но против рейзов нужна крепкая рука.',
+   tipShove:'Мегалодон пушит широко — коллируй крепкими руками.',
+   tip2:'Мегалодон давит ставками и рейзами: его блефы ловятся, но его вэлью-рейзы реальны. Смотри на шансы банка.'};
+const POS = ['UTG','MP','CO','BTN','SB','BB'];
+const POS_RU = {UTG:'первой позиции',MP:'средней позиции',CO:'катоффе',BTN:'баттоне',SB:'малом блайнде',BB:'большом блайнде'};
+
+const GRADES = {
+  brilliant:{label:'Кракен', sym:'!!', color:'#3E6E8E', ink:'#F3EEF9', desc:'лучший и неочевидный ход'},
+  best:{label:'Акула', sym:'★', color:'#9CC2AC', ink:'#1E4030', desc:'лучший ход'},
+  good:{label:'Щука', sym:'✓', color:'#AFC1D9', ink:'#1F3350', desc:'почти идеально'},
+  inacc:{label:'Карась', sym:'?!', color:'#E6CB97', ink:'#4A3712', desc:'неточность'},
+  mistake:{label:'Рыба', sym:'?', color:'#E9B49C', ink:'#5A2A16', desc:'ошибка'},
+  blunder:{label:'Наживка', sym:'??', color:'#D98C96', ink:'#5A1A24', desc:'зевок'},
+};
+const GORDER = ['brilliant','best','good','inacc','mistake','blunder'];
+const LV = {
+  novice:{close:.4, soft:1.5, showEq:true, hints:3, desc:'Больше понятных раздач, мягкие оценки, шансы видны всегда. 3 подсказки за серию.'},
+  pro:{close:.85, soft:1, showEq:false, hints:1, desc:'Почти все раздачи пограничные, строгие оценки, шансы скрыты до решения. 1 подсказка за серию.'},
+};
+const LENS = {short:[5,10,20], full:[3,5,10], duel:[10], aqua:[18]};
+let CFG = {mode:'short', level:'novice', len:{short:10, full:5}, theme:'light'};
+try { const s=JSON.parse(localStorage.getItem('pf_cfg')||'null'); if (s && s.len) CFG=s; } catch(e){}
+const saveCfg = () => { try{ localStorage.setItem('pf_cfg', JSON.stringify(CFG)); }catch(e){} };
+
+// ======================= SOUND =======================
+const SFX = (() => {
+  let ctx=null, muted=false;
+  try { muted = localStorage.getItem('pf_mute')==='1'; } catch(e){}
+  function ac(){ if (!ctx){ try{ ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if (ctx && ctx.state==='suspended') ctx.resume(); return ctx; }
+  function tone(f, t0, dur, type='sine', vol=.18, slide=0){ const c=ac(); if(!c||muted) return;
+    const o=c.createOscillator(), g=c.createGain(); o.type=type; o.frequency.setValueAtTime(f,c.currentTime+t0);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30,f*slide), c.currentTime+t0+dur);
+    g.gain.setValueAtTime(0.0001,c.currentTime+t0); g.gain.exponentialRampToValueAtTime(vol,c.currentTime+t0+.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+t0+dur); o.connect(g).connect(c.destination); o.start(c.currentTime+t0); o.stop(c.currentTime+t0+dur+.02); }
+  function noise(t0,dur,vol=.15,freq=2500){ const c=ac(); if(!c||muted) return;
+    const b=c.createBuffer(1, Math.max(1,c.sampleRate*dur), c.sampleRate), d=b.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+    const s=c.createBufferSource(); s.buffer=b; const f=c.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq; const g=c.createGain(); g.gain.value=vol;
+    s.connect(f).connect(g).connect(c.destination); s.start(c.currentTime+t0); }
+  return {
+    unlock: ac,
+    get muted(){return muted}, toggle(){ muted=!muted; try{localStorage.setItem('pf_mute',muted?'1':'0')}catch(e){} return muted; },
+    deal(){ noise(0,.06,.25,3000); },
+    flip(){ noise(0,.05,.2,1800); tone(900,0,.04,'triangle',.05); },
+    chips(){ for(let i=0;i<5;i++) noise(i*.035,.04,.18,4000+i*300); },
+    check(){ noise(0,.04,.25,900); noise(.09,.04,.25,900); },
+    brilliant(){ [523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.07,.35,'triangle',.16)); tone(2093,.38,.5,'sine',.08); },
+    best(){ tone(659,0,.18,'triangle',.16); tone(988,.1,.3,'triangle',.16); },
+    good(){ tone(784,0,.22,'triangle',.13); },
+    inacc(){ tone(440,0,.2,'square',.06); tone(415,.12,.25,'square',.06); },
+    mistake(){ tone(330,0,.25,'sawtooth',.08); tone(262,.15,.35,'sawtooth',.08); },
+    blunder(){ tone(220,0,.7,'sawtooth',.14,.35); tone(110,0,.8,'square',.08,.5); noise(0,.25,.2,300); },
+    win(){ [392,523,659].forEach((f,i)=>tone(f,i*.08,.25,'triangle',.12)); },
+    lose(){ tone(300,0,.4,'triangle',.12,.6); },
+  };
+})();
+
+// ======================= EQUITY HELPERS =======================
+const _h1=new Int32Array(7), _h2=new Int32Array(7);
+function equityKnown(hc, vc, board){
+  const used=new Uint8Array(52); [...hc,...vc,...board].forEach(c=>used[c]=1);
+  const rest=[]; for(let c=0;c<52;c++) if(!used[c]) rest.push(c);
+  const need=5-board.length; let w=0,n=0;
+  _h1[0]=hc[0];_h1[1]=hc[1];_h2[0]=vc[0];_h2[1]=vc[1];
+  for(let i=0;i<board.length;i++){_h1[2+i]=_h2[2+i]=board[i];}
+  const score=()=>{const x=eval7(_h1,7),y=eval7(_h2,7); w+= x>y?1:x===y?.5:0; n++;};
+  if (need===0) score();
+  else if (need===1){ for(const a of rest){_h1[6]=_h2[6]=a;score();} }
+  else if (need===2){ for(let i=0;i<rest.length;i++)for(let j=i+1;j<rest.length;j++){_h1[5]=_h2[5]=rest[i];_h1[6]=_h2[6]=rest[j];score();} }
+  else { for(let k=0;k<5000;k++){ const p=rest; for(let t=0;t<need;t++){ const r=t+rand(p.length-t); [p[t],p[r]]=[p[r],p[t]]; _h1[2+board.length+t]=_h2[2+board.length+t]=p[t]; } score(); } }
+  return w/n;
+}
+function cmpHands(hc,vc,board){ const x=eval7([...hc,...board],7), y=eval7([...vc,...board],7); return x>y?1:x<y?-1:0; }
+const CATNAMES=['старшая карта','пара','две пары','сет','стрит','флеш','фулл-хаус','каре','стрит-флеш'];
+const catName = cards => CATNAMES[Math.floor(eval7(cards,cards.length)/CAT)];
+function sampleFromSet(set, used){ for (let t=0;t<20000;t++){ const a=rand(52), b=rand(52); if (a===b||used[a]||used[b]) continue; if (set[classOf(a,b)]) return [a,b]; } return null; }
+function dealClass(cls){
+  const r=Math.floor(cls/13), c=cls%13, hi=12-Math.min(r,c), lo=12-Math.max(r,c);
+  if (r===c){ const s1=rand(4); let s2=rand(3); if(s2>=s1)s2++; return [hi*4+s1, hi*4+s2]; }
+  if (r<c){ const s=rand(4); return [hi*4+s, lo*4+s]; }
+  const s1=rand(4); let s2=rand(3); if(s2>=s1)s2++; return [hi*4+s1, lo*4+s2];
+}
+
+// ======================= UI HELPERS =======================
+function cardEl(c, down=false, deal=true){
+  const d=document.createElement('div'); d.className='card'+(down?' down':'')+(deal?' deal':'');
+  if (c!=null){ const s=c&3, red=(s===1||s===2);
+    d.innerHTML=`<div class="in"><div class="face${red?' red':''}"><div class="ix"><span class="r">${rankName(c>>2)}</span><span class="s">${SUITS[s]}</span></div><span class="big">${SUITS[s]}</span></div><div class="back"></div></div>`;
+  } else d.innerHTML='<div class="in"><div class="face"></div><div class="back"></div></div>';
+  return d;
+}
+const cardTxt = c => rankName(c>>2)+SUITS[c&3];
+const cardsHtml = cs => cs.map(c=>`<span class="${(c&3)===1||(c&3)===2?'red':''}">${cardTxt(c)}</span>`).join(' ');
+let bubbleT=null;
+function say(txt, ms=2600){ const b=$('bubble'); b.textContent=txt; b.classList.add('on'); clearTimeout(bubbleT); bubbleT=setTimeout(()=>b.classList.remove('on'), ms); }
+function banner(txt,color){ const b=$('banner'); b.textContent=txt; b.style.color=color||'#fff'; b.classList.add('on'); }
+function hideBanner(){ $('banner').classList.remove('on'); }
+function logMsg(t){ const l=$('log'); if (!t){ l.classList.remove('on'); return; } l.textContent=t; l.classList.add('on'); }
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('on'); setTimeout(()=>el.classList.remove('on'),1800); }
+function flash(cls){ const f=$('flash'); f.className='flash'; void f.offsetWidth; f.className='flash '+cls; }
+function vibrate(p){ try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
+function gradeEffects(g){
+  SFX[g] && SFX[g]();
+  if (g==='brilliant'){ confetti(); flash('cyan'); vibrate([30,40,30]); }
+  if (g==='blunder'){ const a=document.querySelector('.app'); a.classList.remove('shake'); void a.offsetWidth; a.classList.add('shake'); flash('red'); vibrate([80,60,160]); }
+}
+function setBoardSlots(){ const b=$('board'); b.innerHTML=''; for(let i=0;i<5;i++){ const s=document.createElement('div'); s.className='slot'; b.appendChild(s); } }
+function placeBoardCard(idx, c){ const slots=$('board').children; const el=cardEl(c,false,true); slots[idx].replaceWith(el); return el; }
+function setEqBar(eq, vname){ $('eqFill').style.width=(eq*100)+'%'; $('eqH').textContent='Ты '+pct(eq); $('eqV').textContent=vname+' '+pct(1-eq); }
+function setHeroEq(label, eq, show){
+  $('hEqL').textContent=label;
+  if (eq==null){ $('hEq').textContent='…'; $('hEqBar').style.width='0'; return; }
+  if (show){ $('hEq').textContent=pct(eq); $('hEqBar').style.width=(eq*100)+'%'; }
+  else { $('hEq').textContent='скрыто'; $('hEqBar').style.width='0'; }
+}
+function hundred(x){ return `100 раз так → ${fmt(Math.round(x*100))} BB`; }
+
+// confetti
+function confetti(){
+  const cv=$('confetti'), ctx=cv.getContext('2d'); cv.width=innerWidth; cv.height=innerHeight;
+  const cols=['#C9B8E0','#9CC2AC','#AFC1D9','#E6CB97','#3E6E8E'];
+  const P=Array.from({length:140},()=>({x:cv.width/2+(Math.random()-.5)*80,y:cv.height*.45,vx:(Math.random()-.5)*14,vy:-Math.random()*16-4,r:Math.random()*6+3,c:pick(cols),a:Math.random()*6,va:(Math.random()-.5)*.4}));
+  let t=0; (function f(){ ctx.clearRect(0,0,cv.width,cv.height);
+    for(const p of P){ p.x+=p.vx; p.y+=p.vy; p.vy+=.45; p.vx*=.99; p.a+=p.va; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a); ctx.fillStyle=p.c; ctx.fillRect(-p.r/2,-p.r/4,p.r,p.r/2); ctx.restore(); }
+    if (++t<110) requestAnimationFrame(f); else ctx.clearRect(0,0,cv.width,cv.height); })();
+}
+
+// ======================= SERIES STATE =======================
+const state = {results:[], idx:0, hintsLeft:0, hintUsed:false, pending:null, busy:false, running:false};
+function setBusy(b){ state.busy=b; $('btnHome').disabled=b; $('btnHome').style.opacity=b?.3:1; }
+function waitAction(){ return new Promise(r=>{ state.pending=r; }); }
+function resolveAction(v){ const p=state.pending; state.pending=null; if (p) p(v); }
+function renderDots(){
+  const d=$('dots'); d.innerHTML='';
+  if (state.topText){ d.innerHTML=`<div class="toptxt">${state.topText}</div>`; return; }
+  const len=state.dotsLen||CFG.len[CFG.mode]; d.classList.toggle('many', len>10);
+  for (let i=0;i<len;i++){ const x=document.createElement('div'); x.className='dot';
+    const r=state.results[i]; if (r){ x.style.background=GRADES[r.g].color; x.style.boxShadow='none'; } else if (i===state.idx) x.classList.add('cur');
+    d.appendChild(x); }
+}
+// actions bar
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on', s.id===id)); }
+
+// review sheet
+function openSheet(html, btnText, after){
+  $('sheetBody').innerHTML=html; $('btnNext').textContent=btnText;
+  if (after) after($('sheetBody'));
+  return new Promise(res=>{ setTimeout(()=>{ $('sheet').classList.add('on'); $('sheetBg').classList.add('on'); $('sheet').scrollTop=0; },150);
+    state.sheetResolve=res; });
+}
+function closeSheet(){ $('sheet').classList.remove('on'); $('sheetBg').classList.remove('on'); const r=state.sheetResolve; state.sheetResolve=null; if (r) r(); }
+function wireMore(root){ root.querySelectorAll('.more>button').forEach(b=>b.onclick=()=>{ const m=b.parentElement; m.classList.toggle('open'); b.querySelector('span:last-child').textContent=m.classList.contains('open')?'▴':'▾'; }); }
+function gridHtml(fill, meCls){ let s=''; for (let i=0;i<169;i++){ const f=fill(i); s+=`<div class="${f.cls||''}${i===meCls?' me':''}" style="${f.style||''}">${CNAME[i].replace(/[so]$/,'')}</div>`; } return `<div class="grid">${s}</div>`; }
+function gradeFromAcc(acc, hasBrilliant){ if (hasBrilliant && acc>=97) return 'brilliant'; if (acc>=97) return 'best'; if (acc>=85) return 'good'; if (acc>=65) return 'inacc'; if (acc>=40) return 'mistake'; return 'blunder'; }
+
+// ======================= LAVENDER UI LAYER =======================
+const DEN=[[100,'--c100','--c100r'],[25,'--c25','--c25r'],[5,'--c5','--c5r'],[1,'--c1','--c1r'],[.5,'--c05','--c05r']];
+function chipsHtml(x, size=17){
+  x=r1(x); if (x<=0.04) return '';
+  let rem=x; const cols=[];
+  for (const [v,c,r] of DEN){ const n=Math.floor(rem/v+1e-9); if (n>0){ rem=r1(rem-n*v); cols.push({n,c,r}); } }
+  return cols.slice(0,4).map(col=>`<div class="cstack">${Array.from({length:Math.min(col.n,6)},()=>`<span class="chip" style="--cc:var(${col.c});--cr:var(${col.r});--chs:${size}px"></span>`).join('')}</div>`).join('');
+}
+function setStack(who, amt, allin){
+  $(who+'Chips').innerHTML=chipsHtml(amt, who==='h'?17:15);
+  const a=$(who==='h'?'hStack':'vStack'); a.textContent = allin||amt<=0.04 ? 'олл-ин' : `${num(amt)} BB`; a.classList.toggle('allin', !!allin||amt<=0.04);
+}
+function setBet(who, amt, label){
+  const el=$(who==='h'?'hBet':'vBet');
+  if (!amt || amt<=0.04){ el.innerHTML=''; return; }
+  el.innerHTML=`<div class="chips">${chipsHtml(amt,15)}</div><div class="amt${label==='олл-ин'?' allin':''}">${label?label+' ':''}${num(amt)}</div>`;
+}
+function setPot(amt){ $('potChips').innerHTML=chipsHtml(amt,15); $('pot').textContent=`банк ${num(amt)} BB`; }
+function setOpp(who, pos, tag){
+  const a=$('vAva'); a.textContent=who.ini||who.name.slice(0,2); a.classList.toggle('boss', !!who.boss);
+  $('vName').textContent=who.name; $('vTag').textContent=`${pos} · ${tag||who.tag}`;
+}
+
+// --- seats around the table: hero at the bottom, opponent at the top ---
+function renderRing(heroIdx, oppIdx, info){
+  const ring=$('seats'); ring.innerHTML='';
+  const k=(oppIdx-heroIdx+6)%6, nL=k-1, nR=5-k, at={};
+  at[heroIdx]=90; at[oppIdx]=270;
+  for (let i=1;i<=nL;i++) at[(heroIdx+i)%6]=125+95*i/(nL+1);
+  for (let j=1;j<=nR;j++) at[(oppIdx+j)%6]=320+95*j/(nR+1);
+  for (let p=0;p<6;p++){ if (p===heroIdx||p===oppIdx) continue; const t=at[p]*Math.PI/180, x=clamp(50+47*Math.cos(t),13,87), y=50+46*Math.sin(t);
+    const it=info[p]||{label:'пас',cls:'out'}; const el=document.createElement('div'); el.className='plaque '+(it.cls||'');
+    el.style.left=x+'%'; el.style.top=y+'%'; el.textContent=`${POS[p]} · ${it.label}`; ring.appendChild(el); }
+  const d=$('dealer'), btn=3; let x,y;
+  if (btn===heroIdx){ x=30; y=84; } else if (btn===oppIdx){ x=70; y=30; }
+  else { const t=at[btn]*Math.PI/180; x=50+30*Math.cos(t); y=50+30*Math.sin(t)+6; }
+  d.style.left=x+'%'; d.style.top=y+'%';
+}
+
+// --- sea-creature grade icons ---
+const GICON={
+ brilliant:'<path d="M6.5 11.5C6.5 6 9 3 12 3s5.5 3 5.5 8.5z"/><path d="M10 8.5h.01M14 8.5h.01"/><path d="M7.4 11.5c-.6 2.6-2.6 3.6-4.6 3"/><path d="M10 11.5c.2 3.6-1.2 6.6-3.8 8.3"/><path d="M14 11.5c-.2 3.6 1.2 6.6 3.8 8.3"/><path d="M16.6 11.5c.6 2.6 2.6 3.6 4.6 3"/>',
+ best:'<path d="M6 16.5c2.2-1.4 3.6-8.4 9-11-1 4.2-.2 8 2 11"/><path d="M2 18.6c2 1.2 4 1.2 6 0s4-1.2 6 0 4 1.2 6 0"/>',
+ good:'<path d="M2 12c4-3.2 13.5-3.2 17.5 0-4 3.2-13.5 3.2-17.5 0z"/><path d="M19.5 12l2.8-2.6v5.2z"/><path d="M2.4 12h3.4"/><path d="M6.6 10.9h.01"/><path d="M12.5 9.6l1.6-2 1 2.2"/>',
+ inacc:'<path d="M3.5 12c3-5.8 10.5-5.8 13.5 0-3 5.8-10.5 5.8-13.5 0z"/><path d="M17 12l4.2-3.8v7.6z"/><path d="M8 11h.01"/><path d="M10 7.4c1.2-1.6 3-2 4.6-1.4"/>',
+ mistake:'<path d="M3 12c3-5 11-5 14 0-3 5-11 5-14 0z"/><path d="M17 12l4-3.4v6.8z"/><circle cx="7.5" cy="11" r="1.6"/><path d="M8.6 14.4q1.2.8 2.4 0"/>',
+ blunder:'<path d="M12 2.5v9"/><path d="M12 11.5v4a3.5 3.5 0 0 1-7 0v-1"/><path d="M5 14.5l-1.4 1.4M5 14.5l1.4 1.4"/><path d="M14.5 6c2 .4 2.4 2 1.4 3s-.2 2.6 1.6 2.8 2 2 .6 3"/><path d="M10.5 2.5h3"/>',
+};
+const gsvg = (g,w=1.9) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${GICON[g]}</svg>`;
+function badgeHtml(g){ const G=GRADES[g]; return `<span class="badge" style="--gc:${G.color};--gi:${G.ink}" title="${G.label}">${gsvg(g,2.2)}</span>`; }
+function markHtml(g){ const G=GRADES[g]; return `<div class="medal" style="--gc:${G.color};--gi:${G.ink}">${gsvg(g)}<span class="lbl">${G.label}</span></div>`; }
+function miniBadge(g){ const m=$('miniBadge'); m.innerHTML=markHtml(g); m.classList.remove('on'); void m.offsetWidth; m.classList.add('on'); }
+function wireLayers(root){ root.querySelectorAll('.toggle').forEach(b=>b.onclick=()=>{ const l=b.nextElementSibling; l.classList.toggle('open'); b.querySelector('span:last-child').textContent=l.classList.contains('open')?'▴':'▾'; }); }
+const MUTE_SVG = m => `<svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10l-4-3H2z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>${m?'<path d="M11 6l4 4M15 6l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>':'<path d="M11.5 5.5q2 2.5 0 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>'}</svg>`;
+
+// --- mascot fish ---
+function mascotSvg(mood='happy', px=72){
+  const mouth={happy:'<path d="M38 52q5 5 10 0" stroke="#3B3248" stroke-width="2.4" fill="none" stroke-linecap="round"/>',think:'<path d="M38 53h9" stroke="#3B3248" stroke-width="2.4" stroke-linecap="round"/>',sad:'<path d="M38 55q5-5 10 0" stroke="#3B3248" stroke-width="2.4" fill="none" stroke-linecap="round"/>'}[mood];
+  const extra={happy:'<circle cx="84" cy="22" r="4" fill="none" stroke="#9AAEC8" stroke-width="2"/><circle cx="92" cy="12" r="2.6" fill="none" stroke="#9AAEC8" stroke-width="2"/>',think:'<circle cx="86" cy="20" r="2.4" fill="#9AAEC8"/><circle cx="92" cy="14" r="2.4" fill="#9AAEC8"/><circle cx="98" cy="8" r="2.4" fill="#9AAEC8"/>',sad:'<path d="M27 48q-2 4 0 6 2-2 0-6z" fill="#9AAEC8"/>'}[mood];
+  const brow={happy:'',think:'<path d="M24 32l9-2" stroke="#3B3248" stroke-width="2.2" stroke-linecap="round"/>',sad:'<path d="M23 31l9 3" stroke="#3B3248" stroke-width="2.2" stroke-linecap="round"/>'}[mood];
+  return `<svg width="${px}" height="${Math.round(px*.77)}" viewBox="0 0 104 80" aria-hidden="true"><path d="M80 40l20-16v32z" fill="#5A4E70"/><path d="M44 18c6-10 18-10 22-2" fill="#5A4E70"/><ellipse cx="46" cy="42" rx="38" ry="26" fill="#C9B8E0"/><path d="M50 46q8 6 16 0" fill="none" stroke="#5A4E70" stroke-width="2.4" stroke-linecap="round" opacity=".5"/><circle cx="30" cy="38" r="8" fill="#FFFFFF"/><circle cx="31.5" cy="39" r="4" fill="#3B3248"/>${brow}${mouth}${extra}</svg>`;
+}
+
+// --- action buttons; bet sizes slide in on demand ---
+function renderActions(main, sizes, hintFn, moreLabel){
+  const a=$('actions'), s=$('sizes'); a.innerHTML=''; s.innerHTML=''; s.classList.remove('on'); a.style.display='';
+  const hasSizes = sizes && sizes.length;
+  a.style.gridTemplateColumns=`48px repeat(${main.length+(hasSizes?1:0)},1fr)`;
+  const h=document.createElement('button'); h.className='act hint'; h.innerHTML=`?<span class="cnt">${state.hintsLeft}</span>`; h.setAttribute('aria-label','Подсказка');
+  if (state.hintUsed) h.classList.add('used');
+  h.onclick=()=>{ if (state.hintUsed || state.hintsLeft<=0){ if (!state.hintUsed) toast('Подсказки закончились'); return; } SFX.unlock(); state.hintsLeft--; state.hintUsed=true; h.classList.add('used'); h.querySelector('.cnt').textContent=state.hintsLeft; $('hintbox').innerHTML=hintFn(); $('hintbox').classList.add('on'); };
+  a.appendChild(h);
+  const mk=(m,parent)=>{ const b=document.createElement('button'); b.className='act '+(m.cls||''); b.innerHTML=m.html; b.onclick=()=>{ SFX.unlock(); resolveAction(m.v); }; parent.appendChild(b); };
+  for (const m of main) mk(m,a);
+  if (hasSizes){
+    const more=document.createElement('button'); more.className='act more'; more.innerHTML=`${moreLabel||'Ставка'} ›`;
+    more.onclick=()=>{ a.style.display='none'; s.classList.add('on'); };
+    a.appendChild(more);
+    const back=document.createElement('button'); back.className='act back'; back.textContent='‹ назад'; back.onclick=()=>{ s.classList.remove('on'); a.style.display=''; }; s.appendChild(back);
+    for (const m of sizes) mk(m,s);
+  }
+}
+function lockActions(){ document.querySelectorAll('#actions .act, #sizes .act').forEach(b=>b.disabled=true); $('hintbox').classList.remove('on'); }
+
+// ======================= MODE 1: SHORT STACK =======================
+const callPct = (base,E) => clamp(base*Math.pow(10/E,.55), .03, .9);
+const shovePct = (bot,V,posIdx,ante) => clamp(bot.shove*Math.pow(10/V,.6)*[.55,.7,.85,1.1,1.3,1.3][posIdx]*(ante?1:.85), .03, .95);
+const stackPick = () => pick([3,4,5,6,7,8,8,9,10,10,11,12,12,13,14,15,16,17,18,19,20]);
+
+function makeOpenSpot(ante){
+  const heroIdx=pick([0,1,2,2,3,3,3,4,4]), S=stackPick(), bot=pick(BOTS);
+  const regs=shuffle(REGS.slice()), villains=[];
+  for (let p=heroIdx+1;p<6;p++){ const isBB=p===5; villains.push({pos:POS[p], isBB, who:isBB?bot:regs[(p-heroIdx-1)%regs.length], stack:6+rand(40), vPosted:p===4?.5:(isBB?1:0)}); }
+  const spot={type:'open', heroIdx, pos:POS[heroIdx], S, bot, heroPosted:heroIdx===4?.5:0, villains, ante};
+  spot.callers=[0,1].map(a=>villains.map(v=>{ const avail=v.isBB? v.stack-a : v.stack; const E=Math.min(S,avail); const r=topRange(callPct(v.who.base,E)); return {...v, E, set:r.set, p:r.p}; }));
+  spot.evs=[]; for (let c=0;c<169;c++) spot.evs.push(evOpen(spot,c,ante));
+  return spot;
+}
+function evOpen(spot, cls, ante){
+  const dead=1.5+(ante?1:0), cs=spot.callers[ante?1:0];
+  let pNone=1, ev=0, eqW=0, pCall=0, potW=0, riskW=0;
+  for (const v of cs){ const eq=eqVsRange(cls,v.set), pot=2*v.E+dead-spot.heroPosted-v.vPosted, pc=pNone*v.p;
+    ev+=pc*(eq*pot-v.E); eqW+=pc*eq; potW+=pc*pot; riskW+=pc*v.E; pCall+=pc; pNone*=(1-v.p); }
+  const steal=dead-spot.heroPosted, a=pNone*steal; ev+=a;
+  return {go:ev, fold:-spot.heroPosted, pFold:pNone, pCall, eq:pCall?eqW/pCall:.5, partSteal:a, partCall:ev-a, avgPot:pCall?potW/pCall:0, avgRisk:pCall?riskW/pCall:0, steal, dead};
+}
+function makeCallSpot(ante){
+  const heroIdx=pick([5,5,5,4,4,3]); const idxs=[]; for (let i=0;i<heroIdx;i++) for (let k=0;k<=i;k++) idxs.push(i);
+  const vIdx=pick(idxs), bot=pick(BOTS), V=4+rand(22), S=stackPick();
+  const spot={type:'call', heroIdx, pos:POS[heroIdx], vIdx, vpos:POS[vIdx], S, V, bot, heroPosted:heroIdx===5?1:heroIdx===4?.5:0, vPosted:vIdx===4?.5:0, ante};
+  spot.E=Math.min(S,V);
+  spot.sets=[0,1].map(a=>topRange(shovePct(bot,V,vIdx,a)));
+  spot.evs=[]; for (let c=0;c<169;c++) spot.evs.push(evCall(spot,c,ante));
+  return spot;
+}
+function evCall(spot, cls, ante){
+  const dead=1.5+(ante?1:0), r=spot.sets[ante?1:0], eq=eqVsRange(cls,r.set), E=spot.E;
+  const pot=2*E+dead-spot.heroPosted-spot.vPosted;
+  return {go:eq*pot-E, fold:-spot.heroPosted, eq, pot, need:(E-spot.heroPosted)/pot, cost:E-spot.heroPosted, potNow:dead-spot.vPosted+spot.V, dead, rangeP:r.p};
+}
+const spotEv = (spot,c,ante) => spot.type==='open' ? evOpen(spot,c,ante) : evCall(spot,c,ante);
+
+function pickHand(spot){
+  if (Math.random()<LV[CFG.level].close){
+    const cand=[]; let tot=0;
+    for (let c=0;c<169;c++){ const e=spot.evs[c]; if (Math.abs(e.go-e.fold)<1.2){ cand.push(c); tot+=COMBOS[c]; } }
+    if (cand.length){ let x=Math.random()*tot; let cls=cand[cand.length-1]; for (const c of cand){ x-=COMBOS[c]; if (x<=0){cls=c;break;} } return dealClass(cls); }
+  }
+  const a=rand(52); let b=rand(51); if(b>=a)b++; return [a,b];
+}
+
+function gradeShort(chosen, ev, hint, cls, spot){
+  const soft=LV[CFG.level].soft, best=ev.go>=ev.fold?'go':'fold', diff=Math.abs(ev.go-ev.fold), loss=chosen===best?0:diff;
+  let g;
+  if (loss===0){
+    const counter = spot.type==='open' ? (chosen==='go'&&PCT[cls]>.65)||(chosen==='fold'&&PCT[cls]<.12) : (chosen==='go'&&PCT[cls]>.45)||(chosen==='fold'&&PCT[cls]<.06);
+    g = (!hint && diff>=.5 && counter) ? 'brilliant' : 'best';
+  } else if (loss<.1*soft) g='good'; else if (loss<.35*soft) g='inacc'; else if (loss<1*soft) g='mistake'; else g='blunder';
+  return {g, best, diff, loss, acc: loss===0?100:Math.round(100*Math.exp(-loss/(.6*soft)))};
+}
+
+function renderSeatsShort(spot, mark){
+  const info={};
+  if (spot.type==='open'){
+    for (let i=0;i<spot.heroIdx;i++) info[i]={label:'пас', cls:'out'};
+    for (const v of spot.villains){ if (v.isBB) continue; const i=POS.indexOf(v.pos);
+      info[i] = mark===v.pos ? {label:`${v.who.name} · колл`, cls:'call'} : mark ? {label:'пас', cls:'out'} : {label:`${v.who.name} ${v.stack}`, cls:'live'}; }
+    renderRing(spot.heroIdx, 5, info);
+  } else {
+    for (let i=0;i<6;i++) info[i]={label:'пас', cls:'out'};
+    renderRing(spot.heroIdx, spot.vIdx, info);
+  }
+}
+
+function hintShort(spot, ev){
+  if (spot.type==='open'){ const bb=spot.callers[spot.ante?1:0].find(v=>v.isBB);
+    return `Все сбросят примерно в <b>${pct(ev.pFold)}</b> случаев — это сразу +${num(ev.steal)} BB без вскрытия. Если заколлят, у тебя <b>${pct(ev.eq)}</b> против их рук. ${bb.who.short} в BB коллирует ~${pct(bb.p)} рук. Чем короче стек и позже позиция — тем шире пуш.`; }
+  return `Колл стоит ${num(ev.cost)} BB, итоговый банк ${num(ev.pot)} BB — нужно не меньше <b>${pct(ev.need)}</b> шансов. ${spot.bot.short} с ${spot.vpos} пушит ~${pct(ev.rangeP)} рук, у тебя против них <b>${pct(ev.eq)}</b>.`;
+}
+
+async function shortHand(){
+  hideBanner(); logMsg('');
+  const ante=Math.random()<.75, spot=Math.random()<.6 ? makeOpenSpot(ante) : makeCallSpot(ante);
+  const hc=pickHand(spot), cls=classOf(hc[0],hc[1]), ev=spot.evs[cls], lv=LV[CFG.level];
+  state.hintUsed=false;
+  const b=spot.bot;
+  renderSeatsShort(spot,null); setBoardSlots(); $('eqbar').classList.remove('on'); $('vCards').innerHTML=''; $('hCards').innerHTML='';
+  if (spot.type==='open'){ const bb=spot.villains.find(v=>v.isBB); setOpp(b,'BB'); setStack('v', bb.stack); setBet('v', 0); }
+  else { setOpp(b, spot.vpos); setStack('v', 0, true); setBet('v', 0); }
+  $('street').textContent = spot.type==='open' ? 'до тебя все сбросили' : `${b.short} идёт олл-ин`;
+  setPot(spot.type==='open' ? ev.dead : ev.dead-spot.vPosted);
+  const an=$('ante'); an.textContent = ante ? 'АНТЕ 1 BB' : 'БЕЗ АНТЕ'; an.className='ante'+(ante?'':' no'); an.style.display='';
+  $('hPos').textContent=spot.pos; setStack('h', spot.S); setBet('h', 0);
+  $('hName').innerHTML=`${CNAME[cls]}<small>топ ${Math.max(1,Math.round(PCT[cls]*100))}%</small>`;
+  const eqLabel = spot.type==='open' ? 'шансы при колле' : 'шансы vs пуш';
+  setHeroEq(eqLabel, null); $('hintbox').classList.remove('on');
+  const goHtml = spot.type==='open' ? 'Олл-ин' : `Колл<small>${num(ev.cost)} BB</small>`;
+  const btns=[{html:'Фолд', v:'fold', cls:'fold'},{html:goHtml, v:'go', cls:'go'}];
+  renderActions(btns, null, ()=>hintShort(spot,ev)); lockActions(); setBusy(true);
+  const vc=$('vCards');
+  for (let i=0;i<2;i++){ $('hCards').appendChild(cardEl(hc[i],true)); SFX.deal(); await sleep(120); vc.appendChild(cardEl(null,true)); await sleep(80); }
+  await sleep(250);
+  for (const el of $('hCards').children){ el.classList.remove('down'); SFX.flip(); await sleep(110); }
+  if (spot.type==='call'){ setBet('v', spot.V, 'олл-ин'); say(pick(b.shoveTalk), 2200); SFX.chips(); }
+  setHeroEq(eqLabel, ev.eq, lv.showEq);
+  renderActions(btns, null, ()=>hintShort(spot,ev));
+  setBusy(false);
+  const idleT=setTimeout(()=>{ if(state.pending && spot.type==='open') say(pick(b.idle)); }, 4000);
+  const action = await waitAction(); clearTimeout(idleT);
+  if (action==='__abort') throw ABORT;
+  setBusy(true); lockActions();
+  const gr=gradeShort(action, ev, state.hintUsed, cls, spot);
+  miniBadge(gr.g); setHeroEq(eqLabel, ev.eq, true);
+  const result = spot.type==='open' ? await resolveOpen(spot, hc, action) : await resolveCall(spot, hc, action);
+  setBusy(false);
+  return {mode:'short', spot, hc, cls, ev, action, hint:state.hintUsed, ...gr, result, bb:result.bb, label:CNAME[cls]};
+}
+
+async function runout(hc, vc, deck, vname, board=[]){
+  $('eqbar').classList.add('on'); setEqBar(equityKnown(hc,vc,board), vname); await sleep(1000);
+  for (const [nm,n] of [['флоп',3],['тёрн',1],['ривер',1]]){
+    if (board.length>=(nm==='флоп'?3:nm==='тёрн'?4:5)) continue;
+    $('street').textContent=nm;
+    for (let i=0;i<n;i++){ const c=deck.pop(); placeBoardCard(board.length,c); board.push(c); SFX.deal(); await sleep(170); }
+    const eq=equityKnown(hc,vc,board); setEqBar(eq, vname);
+    await sleep(nm==='ривер'?600:(eq>.15&&eq<.85?1300:900));
+  }
+  return board;
+}
+function freshDeck(excl){ const u=new Uint8Array(52); excl.forEach(c=>u[c]=1); const d=[]; for(let c=0;c<52;c++) if(!u[c]) d.push(c); return shuffle(d); }
+
+async function resolveOpen(spot, hc, action){
+  const ante=spot.ante, cs=spot.callers[ante?1:0], deck=freshDeck(hc), bbv=cs.find(v=>v.isBB);
+  let caller=null;
+  for (const v of cs){ v.cards=[deck.pop(),deck.pop()]; if (v.set[classOf(v.cards[0],v.cards[1])]){ caller=v; break; } }
+  const dead=1.5+(ante?1:0); const res={bb:0, outcome:'fold'};
+  if (action==='fold'){
+    $('hCards').querySelectorAll('.card').forEach(c=>c.classList.add('dim')); banner('Пас','var(--ink)'); SFX.deal();
+    res.bb=-spot.heroPosted;
+    res.would = caller ? `Если бы пошёл олл-ин — ${caller.isBB?caller.who.name:caller.who.name+' ('+caller.pos+')'} заколлил бы с ${cardTxt(caller.cards[0])}${cardTxt(caller.cards[1])}.` : 'Если бы пошёл олл-ин — все бы сбросили.';
+    if (bbv) say(caller&&caller.isBB ? 'Эх, а я бы заколлил…' : pick(bbv.who.fold));
+    await sleep(1000); return res;
+  }
+  SFX.chips(); setStack('h',0,true); setBet('h', spot.S-spot.heroPosted+ (spot.heroPosted?spot.heroPosted:0), 'олл-ин');
+  banner('Олл-ин','var(--accent)'); await sleep(700); hideBanner();
+  if (!caller){
+    renderSeatsShort(spot,'none'); if (bbv) say(pick(bbv.who.fold)); await sleep(800);
+    setBet('h',0); setPot(dead+spot.S-spot.heroPosted);
+    banner('Все сбросили — банк твой','var(--accent)'); SFX.win(); res.bb=dead-spot.heroPosted; res.outcome='steal'; await sleep(1100); return res;
+  }
+  renderSeatsShort(spot, caller.pos);
+  if (!caller.isBB){ setOpp(caller.who, caller.pos, 'заколлил твой олл-ин'); setStack('v', caller.stack-caller.E); }
+  else setStack('v', caller.stack-caller.E-(ante?1:0));
+  say(pick(caller.isBB?caller.who.call:['Колл.','Заколлю, пожалуй','Плачу']), 2200);
+  SFX.chips(); setBet('v', caller.E, 'колл');
+  const pot=2*caller.E+dead-spot.heroPosted-caller.vPosted;
+  await sleep(600); setBet('v',0); setBet('h',0); setPot(pot);
+  const vcEl=$('vCards'); vcEl.innerHTML='';
+  const vEls=caller.cards.map(c=>{const e=cardEl(c,true,false); vcEl.appendChild(e); return e;});
+  await sleep(400); for(const e of vEls){ e.classList.remove('down'); SFX.flip(); await sleep(150); }
+  const board=await runout(hc, caller.cards, deck, caller.who.short||caller.who.name);
+  return finishShowdown(res, hc, caller.cards, board, pot, caller.E, vEls, caller.isBB?caller.who:null);
+}
+async function finishShowdown(res, hc, vc, board, pot, risk, vEls, who){
+  const r=cmpHands(hc,vc,board);
+  res.bb = r>0 ? pot-risk : r===0 ? pot/2-risk : -risk; res.outcome = r>0?'win':r<0?'lose':'split'; res.board=board; res.vc=vc;
+  if (r>0){ banner(`Выиграл · ${catName([...hc,...board])}`,'var(--accent)'); SFX.win(); $('hCards').querySelectorAll('.card').forEach(c=>c.classList.add('win')); if (who) say(pick(who.lose)); }
+  else if (r<0){ banner(`Проиграл · ${catName([...vc,...board])}`,'var(--bad)'); SFX.lose(); vEls.forEach(c=>c.classList.add('win')); if (who) say(pick(who.win)); }
+  else banner('Делёж банка','var(--ink)');
+  await sleep(1500); return res;
+}
+async function resolveCall(spot, hc, action){
+  const ante=spot.ante, set=spot.sets[ante?1:0].set, used=new Uint8Array(52); used[hc[0]]=used[hc[1]]=1;
+  const vc=sampleFromSet(set, used) || [0,1];
+  const deck=freshDeck([...hc,...vc]); const dead=1.5+(ante?1:0);
+  const vcEl=$('vCards'); vcEl.innerHTML=''; const vEls=vc.map(c=>{const e=cardEl(c,true,false); vcEl.appendChild(e); return e;});
+  const res={bb:0, outcome:'fold'};
+  if (action==='fold'){
+    $('hCards').querySelectorAll('.card').forEach(c=>c.classList.add('dim')); banner('Пас','var(--ink)'); SFX.deal();
+    res.bb=-spot.heroPosted; await sleep(700); hideBanner();
+    for(const e of vEls){ e.classList.remove('down'); SFX.flip(); await sleep(150); }
+    const board=[]; while(board.length<5) board.push(deck.pop());
+    const r=cmpHands(hc,vc,board);
+    res.would = `У ${spot.bot.gen} было ${cardTxt(vc[0])}${cardTxt(vc[1])}. Если бы заколлил — ${r>0?'выиграл бы':r<0?'проиграл бы':'поделили бы банк'} (борд ${board.map(cardTxt).join(' ')}).`;
+    say(r>0?'Фух, повезло мне…':pick(spot.bot.win)); await sleep(1300); return res;
+  }
+  SFX.chips(); setStack('h', spot.S-spot.E, spot.S<=spot.E); setBet('h', spot.E, 'колл'); banner('Колл','var(--accent)');
+  const pot=2*spot.E+dead-spot.heroPosted-spot.vPosted;
+  await sleep(700); hideBanner(); say(pick(spot.bot.call),1800);
+  setBet('h',0); setBet('v',0); setPot(pot);
+  for(const e of vEls){ e.classList.remove('down'); SFX.flip(); await sleep(150); }
+  const board=await runout(hc, vc, deck, spot.bot.short);
+  return finishShowdown(res, hc, vc, board, pot, spot.E, vEls, spot.bot);
+}
+
+// ---------- review: 3 layers ----------
+function memeShort(rec){
+  const good=rec.loss===0||rec.g==='good', o=rec.result.outcome;
+  if (o==='steal') return good ? 'Все сбросили. Банк твой — и решение верное.' : 'Все сбросили… но повезло. В долгую такой пуш теряет.';
+  if (o==='fold') return rec.result.would;
+  if (o==='split') return 'Поделили банк. Скучно, но честно.';
+  if (good && o==='lose') return 'Сыграл верно — и проиграл. Добро пожаловать в покер.';
+  if (good && o==='win') return 'Верно и прибыльно. Красота.';
+  if (!good && o==='win') return 'Ход так себе, но затащил. Удача — не стратегия.';
+  return 'И ход плохой, и карта не пришла.';
+}
+function reviewShortHtml(rec){
+  const sp=rec.spot, ev=rec.ev, goName = sp.type==='open'?'Олл-ин':'Колл';
+  const actName = rec.action==='go' ? goName : 'Фолд', bestName = rec.best==='go' ? goName : 'Фолд';
+  const hand=CNAME[rec.cls], top=Math.max(1,Math.round(PCT[rec.cls]*100));
+  let vt, vn, vnCls;
+  if (rec.loss>0){ vt=`Лучше было: ${bestName.toLowerCase()}.`; vn=`${fmt(-rec.loss)} BB за раздачу · 100 раз = ${fmt(Math.round(-rec.loss*100))} BB`; vnCls='bad'; }
+  else if (rec.diff<.1){ vt='Пограничный спот — оба хода почти равны.'; vn='разница меньше 0,1 BB'; vnCls=''; }
+  else { vt = rec.g==='brilliant' ? `${actName} — смело и точно!` : `${actName} — верное решение.`; vn=`выгоднее на ${num(rec.diff)} BB за раздачу`; vnCls='good'; }
+  const vs = rec.hint ? 'с подсказкой' : '';
+  const foldD = sp.heroPosted ? `теряешь блайнд ${num(sp.heroPosted)} BB` : 'ничего не теряешь';
+  const box=(name,v,isBest,d)=>`<div class="evbox${isBest?' best':''}"><div class="k">${name}${isBest?'<em>лучше</em>':''}</div><div class="v">${fmt(v)} BB</div><div class="d">${d}</div>${Math.abs(v)>=.05?`<div class="h">${hundred(v)}</div>`:''}</div>`;
+  // why
+  const p=[];
+  if (sp.type==='open'){
+    p.push(`<p><b>${hand}</b> (топ ${top}% рук), ${sp.S} BB на ${POS_RU[sp.pos]}. `+
+      (rec.diff<.1 ? 'Разница меньше 0,1 BB — тут нельзя сильно ошибиться.</p>'
+      : rec.best==='go' ? `Олл-ин лучше: ${PCT[rec.cls]>.42?'фолд-эквити и деньги в банке окупают слабую руку.':'рука достаточно сильная, колл не страшен.'}</p>`
+      : `Фолд лучше: ${PCT[rec.cls]<.2?'коллировать будут руки ещё сильнее — и слишком часто.':'слишком часто упрёшься в руку посильнее.'}</p>`));
+  } else {
+    p.push(`<p><b>${hand}</b> (топ ${top}% рук), ${sp.S} BB на ${POS_RU[sp.pos]}. ${sp.bot.short} пушит отсюда примерно топ ${pct(ev.rangeP)} рук. `+
+      (rec.best==='go' ? `Против них у тебя <b>${pct(ev.eq)}</b>, а нужно всего ${pct(ev.need)} — колл окупается.</p>` : `Против них у тебя <b>${pct(ev.eq)}</b>, а для колла нужно ${pct(ev.need)} — не хватает.</p>`));
+  }
+  const alt=spotEv(sp, rec.cls, !sp.ante), altBest=alt.go>=alt.fold?'go':'fold', altName = altBest==='go' ? (sp.type==='open'?'олл-ин':'колл') : 'фолд';
+  if (altBest!==rec.best && Math.abs(alt.go-alt.fold)>.05)
+    p.push(sp.ante ? `<p class="warn">Анте решило дело: без него в банке было бы 1,5 BB вместо 2,5 — и правильным был бы <b>${altName}</b>.</p>`
+                   : `<p class="warn">Тест на внимательность: анте нет, в банке только 1,5 BB. С анте здесь был бы <b>${altName}</b>.</p>`);
+  else if (!sp.ante) p.push(`<p class="warn">Без анте банк меньше (1,5 BB вместо 2,5), но решение то же.</p>`);
+  p.push(`<p class="tip">${sp.type==='open' ? sp.villains.find(v=>v.isBB).who.tip : sp.bot.tipShove}</p>`);
+  // math
+  let m;
+  if (sp.type==='open') m=`<p>В банке до тебя <b>${num(ev.dead)} BB</b>: блайнды 1,5${sp.ante?' + анте 1':' (анте нет)'}.</p>
+      <p>Все сбрасывают в ${pct(ev.pFold)} случаев — ты забираешь +${num(ev.steal)} BB:</p><span class="eq">${pct(ev.pFold)} × ${num(ev.steal)} = ${fmt(ev.partSteal)} BB</span>
+      <p>Коллируют в ${pct(ev.pCall)} — у тебя ${pct(ev.eq)} против коллирующих рук, банк ≈${num(ev.avgPot)} BB, риск ≈${num(ev.avgRisk)} BB:</p><span class="eq">${pct(ev.pCall)} × (${pct(ev.eq)} × ${num(ev.avgPot)} − ${num(ev.avgRisk)}) ≈ ${fmt(ev.partCall)} BB</span>
+      <p>Итого олл-ин ${fmt(ev.go)} BB, фолд ${fmt(ev.fold)} BB.</p>`;
+  else m=`<p>В банке ${num(ev.potNow)} BB (блайнды 1,5${sp.ante?' + анте 1':''} + его олл-ин). Колл стоит ${num(ev.cost)} BB, итоговый банк ${num(ev.pot)} BB.</p>
+      <p>Сколько шансов нужно для колла = цена колла / итоговый банк:</p><span class="eq">${num(ev.cost)} / ${num(ev.pot)} = ${pct(ev.need)}</span>
+      <p>У тебя ${pct(ev.eq)} против его диапазона:</p><span class="eq">колл: ${pct(ev.eq)} × ${num(ev.pot)} − ${num(sp.E)} = ${fmt(ev.go)} BB · фолд: ${fmt(ev.fold)} BB</span>`;
+  m+=`<p class="tip" style="color:var(--mute)">EV — ожидаемая ценность: сколько решение приносит в среднем за раздачу, если сыграть его много раз.</p>`;
+  const res = rec.result.outcome!=='fold' ? ` <b>${fmt(rec.result.bb)} BB</b>` : '';
+  return `
+    <div class="l1">${markHtml(rec.g)}<div class="verdict"><div class="vt">${vt}</div><div class="vn ${vnCls}">${vn}</div>${vs?`<div class="vs">${vs}</div>`:''}</div></div>
+    <div class="result">${memeShort(rec)}${res}</div>
+    <button class="toggle"><span>Почему так</span><span>▾</span></button>
+    <div class="layer"><div class="evrow">${box(goName, ev.go, rec.best==='go', 'в среднем за раздачу')}${box('Фолд', ev.fold, rec.best==='fold', foldD)}</div><div class="explain">${p.join('')}</div></div>
+    <button class="toggle"><span>Вся математика</span><span>▾</span></button>
+    <div class="layer"><div class="math">${m}</div>
+      <div class="gridwrap"><div class="tabs"><button class="on" data-t="me">Мой чарт</button><button data-t="bot">Руки соперника</button></div><div id="gridBox"></div></div></div>`;
+}
+function wireShortReview(root, rec){
+  wireLayers(root);
+  const sp=rec.spot;
+  const draw=t=>{
+    let html, title, legend;
+    if (t==='me'){
+      let comb=0; html=gridHtml(i=>{ const e=sp.evs[i], d=e.go-e.fold; if (d>0){ comb+=COMBOS[i]; return {cls:'sh', style:`background:rgba(110,160,130,${Math.min(1,.55+d/4)})`}; } return {}; }, rec.cls);
+      title = sp.type==='open' ? `Олл-ин выгоден с ${Math.round(comb/1326*100)}% рук в этом споте` : `Колл выгоден с ${Math.round(comb/1326*100)}% рук против этого пуша`;
+      legend=`<span style="--c:#8FB8A0">${sp.type==='open'?'олл-ин':'колл'} в плюс</span><span style="--c:var(--gridOff)">фолд</span><span style="--c:#E6CB97">твоя рука</span>`;
+    } else {
+      const set = sp.type==='open' ? sp.callers[sp.ante?1:0].find(v=>v.isBB).set : sp.sets[sp.ante?1:0].set;
+      let comb=0; html=gridHtml(i=>{ if (set[i]){ comb+=COMBOS[i]; return {cls:'sh', style:'background:var(--gridBot)'}; } return {}; }, rec.cls);
+      title = sp.type==='open' ? `${sp.bot.short} в BB коллирует ${Math.round(comb/1326*100)}% рук` : `${sp.bot.short} отсюда пушит ${Math.round(comb/1326*100)}% рук`;
+      legend=`<span style="--c:var(--gridBot)">${sp.type==='open'?'коллирует':'пушит'}</span><span style="--c:var(--gridOff)">сбрасывает</span><span style="--c:#E6CB97">твоя рука</span>`;
+    }
+    root.querySelector('#gridBox').innerHTML=`<div class="gridtitle">${title}</div>${html}<div class="legend">${legend}</div>`;
+  };
+  root.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ root.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b)); draw(b.dataset.t); });
+  draw('me');
+}
+
+// ======================= MODE 2: FULL HAND =======================
+const POST_ORDER = p => p>=4 ? p-4 : p+2;
+const STREETS = ['префлоп','флоп','тёрн','ривер'];
+const ST_SHORT = ['ПФ','Флоп','Тёрн','Ривер'];
+const botPf = (bot,key,pos) => { const v=bot.pf[key]; return Array.isArray(v) ? v[Math.min(pos,4)] : v; };
+let BLIND_MUL=1;
+const openSize = idx => r1((idx===4 ? 3 : 2.2)*BLIND_MUL);
+
+// bots call preflop all-ins by pot odds against the range the hero has actually been shoving with
+const HERO_SHOVE={n:0, s:0}; let PF_NEED=.5; let _csCache={};
+function heroShoveFreq(){ return clamp((HERO_SHOVE.s+.6)/(HERO_SHOVE.n+4), .06, .75); }
+function callSetVsShove(bot, need){
+  const f=heroShoveFreq(), key=bot.name+'|'+f.toFixed(2)+'|'+need.toFixed(2)+'|'+bot.pp.base;
+  if (_csCache[key]) return _csCache[key];
+  const hr=topRange(f).set, adj = bot.pp.base<.15 ? -.05 : bot.pp.base>.5 ? .06 : 0;
+  const set=new Uint8Array(169); for (let c=0;c<169;c++) if (eqVsRange(c,hr) > need+adj) set[c]=1;
+  return _csCache[key]=set;
+}
+function pfRule(bot, ctx, c, botIdx, potOddsGood, depth){
+  const P=PCT[c];
+  if (ctx==='open') return P<botPf(bot,'open',botIdx) ? 'raise' : 'fold';
+  if (ctx==='vsOpen'){ const cl=bot.pf.call+(botIdx===5?.12:0); return P<bot.pf.tb?'raise':P<cl?'call':'fold'; }
+  if (ctx==='vs3b') return P<.035 ? 'raise' : P<bot.pf.c3 ? 'call' : 'fold';
+  return callSetVsShove(bot, PF_NEED)[c] ? 'call' : 'fold';
+}
+function polFirst(bot, s, street){ const p=bot.pp; if (s>p.val) return .85; if (s<.35) return street===3?p.rb:p.bluff; return .08; }
+function polFacing(bot, s, req, canRaise, commitFrac){
+  const p=bot.pp, t=Math.min(p.base+p.slope*req+p.commit*(commitFrac||0), p.val+.05, .9), cont=1/(1+Math.exp(-(s-t)/.035));
+  const r=(canRaise && s>p.raiseT) ? .65*cont : 0; return {f:1-cont, c:cont-r, r};
+}
+
+// --- strengths of all combos on a board (percentile + draws), and hero equity vs each combo ---
+const _t=new Int32Array(7);
+function strengths(board){
+  const S=new Float32Array(1326), vals=new Float64Array(1326), bu=new Uint8Array(52); board.forEach(c=>bu[c]=1);
+  const arr=[]; const n=2+board.length;
+  for (let i=0;i<1326;i++){ const [a,b]=CMB[i]; if (bu[a]||bu[b]){ vals[i]=-1; continue; }
+    _t[0]=a;_t[1]=b; for(let k=0;k<board.length;k++)_t[2+k]=board[k]; vals[i]=eval7(_t,n); arr.push(vals[i]); }
+  arr.sort((x,y)=>x-y);
+  const lb=v=>{ let lo=0,hi=arr.length; while(lo<hi){const m=(lo+hi)>>1; if(arr[m]<v)lo=m+1; else hi=m;} return lo; };
+  const ub=v=>{ let lo=0,hi=arr.length; while(lo<hi){const m=(lo+hi)>>1; if(arr[m]<=v)lo=m+1; else hi=m;} return lo; };
+  for (let i=0;i<1326;i++){ if (vals[i]<0) continue; let s=(lb(vals[i])+ub(vals[i]))/2/arr.length;
+    if (board.length<5){ const [a,b]=CMB[i]; const sc=[0,0,0,0]; let mask=0; for (const c of [a,b,...board]){ sc[c&3]++; mask|=1<<(c>>2); }
+      const cat=Math.floor(vals[i]/CAT);
+      if (cat<5){ for (let su=0;su<4;su++) if (sc[su]===4 && ((a&3)===su||(b&3)===su)) s+= board.length===3?.15:.08;
+        const m=((mask<<1)|((mask>>12)&1)); let w=0; for (let st=0;st<=9;st++){ let cnt=0; for(let k=0;k<5;k++) if(m&(1<<(st+k))) cnt++; if(cnt===4) w++; }
+        if (cat<4) s += w>=2 ? (board.length===3?.1:.05) : w===1 ? (board.length===3?.04:.02) : 0; } }
+    S[i]=Math.min(1,s); }
+  return S;
+}
+function heroEqs(hc, board){
+  const E=new Float32Array(1326);
+  if (board.length===0){ const hcls=classOf(hc[0],hc[1]); for (let i=0;i<1326;i++) E[i]=eqAt(hcls,CMB_CLS[i]); return E; }
+  const used=new Uint8Array(52); [...hc,...board].forEach(c=>used[c]=1);
+  const rest=[]; for (let c=0;c<52;c++) if(!used[c]) rest.push(c);
+  let runs=[];
+  if (board.length===5) runs=[[]];
+  else if (board.length===4) runs=rest.map(c=>[c]);
+  else { for (let k=0;k<240;k++){ const i=rand(rest.length); let j=rand(rest.length-1); if(j>=i)j++; runs.push([rest[i],rest[j]]); } }
+  const hv=runs.map(r=>eval7([...hc,...board,...r],7));
+  const bl=board.length;
+  for (let i=0;i<1326;i++){ const [a,b]=CMB[i]; if (used[a]||used[b]) continue; let w=0,n=0;
+    _t[0]=a;_t[1]=b; for(let k=0;k<bl;k++)_t[2+k]=board[k];
+    for (let k=0;k<runs.length;k++){ const r=runs[k]; if (r.length && (r[0]===a||r[0]===b||(r.length>1&&(r[1]===a||r[1]===b)))) continue;
+      for (let q=0;q<r.length;q++) _t[2+bl+q]=r[q]; const v=eval7(_t,7); w+= hv[k]>v?1:hv[k]===v?.5:0; n++; }
+    E[i]=n?w/n:.5; }
+  return E;
+}
+
+let H=null;
+function fullRender(){
+  setStack('h', H.hs); setStack('v', H.bs);
+  setBet('h', H.hi, H.hs<=0.04&&H.hi>0?'олл-ин':''); setBet('v', H.bi, H.bs<=0.04&&H.bi>0?'олл-ин':'');
+  setPot(H.pot-H.hi-H.bi);
+}
+function renderSeatsFull(){ const info={}; for (let i=0;i<6;i++) info[i]={label:'пас',cls:'out'}; renderRing(H.heroIdx, H.botIdx, info); }
+function put(who, amt){ amt=r1(Math.min(amt, who==='h'?H.hs:H.bs)); if (who==='h'){ H.hs=r1(H.hs-amt); H.hi=r1(H.hi+amt); } else { H.bs=r1(H.bs-amt); H.bi=r1(H.bi+amt); } H.pot=r1(H.pot+amt); return amt; }
+function refundExcess(){ // if one player bet more than the other could match after an all-in call
+  if (H.hi>H.bi && H.bs===0){ const d=r1(H.hi-H.bi); H.hi=H.bi; H.hs=r1(H.hs+d); H.pot=r1(H.pot-d); }
+  if (H.bi>H.hi && H.hs===0){ const d=r1(H.bi-H.hi); H.bi=H.hi; H.bs=r1(H.bs+d); H.pot=r1(H.pot-d); }
+}
+function validMask(){ const u=new Uint8Array(52); [...H.hc,...H.board].forEach(c=>u[c]=1); return u; }
+function normW(){ const u=validMask(); let s=0; const w=new Float64Array(1326);
+  for (let i=0;i<1326;i++){ const [a,b]=CMB[i]; if (u[a]||u[b]) continue; w[i]=H.W[i]; s+=w[i]; }
+  if (s<=0){ for (let i=0;i<1326;i++){ const [a,b]=CMB[i]; if (!(u[a]||u[b])){ w[i]=1; s++; } } }
+  for (let i=0;i<1326;i++) w[i]/=s; return w; }
+
+async function fullHand(opts={}){
+  hideBanner(); logMsg('');
+  const bot=opts.bot||pick(BOTS); let heroIdx, botIdx;
+  if (Math.random()<.65){ botIdx=rand(5); heroIdx=botIdx+1+rand(5-botIdx); } else { heroIdx=rand(5); botIdx=heroIdx+1+rand(5-heroIdx); }
+  const heroStart=opts.heroStack!=null?r1(opts.heroStack):25+rand(36), botStart=opts.botStack!=null?opts.botStack:25+rand(36);
+  H={opts, bot, heroIdx, botIdx, heroPos:POS[heroIdx], botPos:POS[botIdx], heroStart, botStart, hs:heroStart, bs:botStart, hi:0, bi:0, pot:0, board:[], street:0, raises:0, decisions:[], heroIP:POST_ORDER(heroIdx)>POST_ORDER(botIdx)};
+  // blinds + ante (BB pays the ante)
+  const M = BLIND_MUL = opts.blindMul||1, sb=r1(.5*M), bb=r1(1*M);
+  if (heroIdx===4) put('h',sb); else if (botIdx===4) put('b',sb); else H.pot=r1(H.pot+sb);
+  if (heroIdx===5) put('h',bb); else if (botIdx===5) put('b',bb); else H.pot=r1(H.pot+bb);
+  { const an = heroIdx===5 ? Math.min(bb,H.hs) : botIdx===5 ? Math.min(bb,H.bs) : bb; if (heroIdx===5) H.hs=r1(H.hs-an); else if (botIdx===5) H.bs=r1(H.bs-an); H.pot=r1(H.pot+an); }
+  H.totalChips = r1(heroStart+botStart+(heroIdx===4||botIdx===4?0:sb)+(heroIdx===5||botIdx===5?0:2*bb));
+  // cards
+  let hc; if (Math.random()<.8){ do { hc=[rand(52),rand(52)]; } while (hc[0]===hc[1] || PCT[classOf(hc[0],hc[1])]>.5); } else { do { hc=[rand(52),rand(52)]; } while (hc[0]===hc[1]); }
+  H.hc=hc; H.hcls=classOf(hc[0],hc[1]);
+  const used=new Uint8Array(52); used[hc[0]]=used[hc[1]]=1;
+  const botFirst = botIdx<heroIdx;
+  let bc;
+  if (botFirst){ const t=botPf(bot,'open',botIdx); for(;;){ const a=rand(52), b=rand(52); if (a===b||used[a]||used[b]) continue; if (PCT[classOf(a,b)]<t){ bc=[a,b]; break; } } }
+  else { for(;;){ const a=rand(52), b=rand(52); if (a===b||used[a]||used[b]) continue; bc=[a,b]; break; } }
+  H.bc=bc; H.bci=CIDX[bc[0]*52+bc[1]];
+  H.deck=freshDeck([...hc,...bc]);
+  H.W=new Float64Array(1326); for (let i=0;i<1326;i++){ const [a,b]=CMB[i]; H.W[i]=(used[a]||used[b])?0:1; }
+  state.hintUsed=false;
+  // render
+  setOpp(bot, POS[botIdx]);
+  renderSeatsFull(); setBoardSlots(); $('eqbar').classList.remove('on'); $('ante').style.display=''; $('ante').className='ante'; $('ante').textContent=`анте ${num(M)} BB${M>1?' · блайнды ×'+num(M):''}`;
+  $('street').textContent='префлоп'; $('hPos').textContent=H.heroPos;
+  $('hName').innerHTML=`${CNAME[H.hcls]}<small>топ ${Math.max(1,Math.round(PCT[H.hcls]*100))}%</small>`;
+  setHeroEq('шансы', null); $('hCards').innerHTML=''; $('vCards').innerHTML=''; $('hintbox').classList.remove('on');
+  renderActions([{html:'…',v:'x',cls:'fold'}],null,()=>''); lockActions(); setBusy(true); fullRender();
+  for (let i=0;i<2;i++){ $('hCards').appendChild(cardEl(hc[i],true)); SFX.deal(); await sleep(120); $('vCards').appendChild(cardEl(null,true)); await sleep(80); }
+  await sleep(250); for (const el of $('hCards').children){ el.classList.remove('down'); SFX.flip(); await sleep(110); }
+  if (opts.xray){ const v0=$('vCards').children[0]; const e=cardEl(bc[0],false,false); v0.replaceWith(e); SFX.flip(); }
+
+  let outcome=null;
+  for (H.street=0; H.street<4; H.street++){
+    if (H.street>0){
+      H.hi=0; H.bi=0; H.raises=0; fullRender();
+      const n = H.street===1?3:1; $('street').textContent=STREETS[H.street];
+      for (let k=0;k<n;k++){ const c=H.deck.pop(); placeBoardCard(H.board.length,c); H.board.push(c); SFX.deal(); await sleep(170); }
+      await sleep(300);
+    }
+    H.S = H.street===0 ? null : strengths(H.board);
+    H.EQ = heroEqs(H.hc, H.board);
+    const u=validMask(); for (let i=0;i<1326;i++){ const [a,b]=CMB[i]; if (u[a]||u[b]) H.W[i]=0; }
+    const r = await playStreet();
+    if (r==='fold'){ outcome=H.folded==='h'?'heroFold':'botFold'; break; }
+    if (r==='allin'){ outcome='allin'; break; }
+  }
+  if (!outcome) outcome='showdown';
+  return await finishFull(outcome);
+}
+
+async function playStreet(){
+  H.acted={h:false,b:false};
+  let actor = H.street===0 ? (H.heroIdx<H.botIdx?'h':'b') : (POST_ORDER(H.heroIdx)<POST_ORDER(H.botIdx)?'h':'b');
+  // if someone is already all-in before the street, skip betting
+  if (H.hs===0 || H.bs===0) return 'allin';
+  for (let guard=0; guard<12; guard++){
+    const r = actor==='h' ? await heroAct() : await botAct();
+    fullRender();
+    if (r==='fold'){ H.folded=actor; return 'fold'; }
+    H.acted[actor]=true;
+    refundExcess(); fullRender();
+    if (Math.abs(H.hi-H.bi)<1e-9 && (H.hs===0 || H.bs===0) && H.acted.h && H.acted.b) return 'allin';
+    if (Math.abs(H.hi-H.bi)<1e-9 && H.acted.h && H.acted.b) return 'next';
+    if (Math.abs(H.hi-H.bi)<1e-9 && (H.hs===0 || H.bs===0)) return 'allin';
+    actor = actor==='h'?'b':'h';
+  }
+  return 'next';
+}
+
+// ---------- bot ----------
+async function botAct(){
+  const bot=H.bot, toCall=r1(H.hi-H.bi); await sleep(650);
+  let act, amt=0, text;
+  if (H.street===0){
+    let ctx;
+    if (H.raises===0) ctx='open';
+    else if (H.hs===0) ctx='vsAllin';
+    else if (H.raises===1) ctx='vsOpen';
+    else if (H.raises===2) ctx='vs3b';
+    else ctx='vsAllin';
+    const potOdds = toCall < .4*(H.pot+toCall);
+    const depth=Math.min(H.hs+H.hi, H.bs+H.bi);
+    { const ca=Math.min(toCall,H.bs); PF_NEED = ca/(H.pot+ca); }
+    const rule=c=>pfRule(bot, ctx, c, H.botIdx, potOdds, depth);
+    act=rule(H.bci==null?0:CMB_CLS[H.bci]);
+    for (let i=0;i<1326;i++) if (H.W[i]>0 && rule(CMB_CLS[i])!==act) H.W[i]=0;
+    if (act==='raise'){
+      let X = ctx==='open' ? openSize(H.botIdx) : ctx==='vsOpen' ? r1(3*H.hi) : H.bi+H.bs;
+      if (X >= .4*(H.bi+H.bs) || ctx==='vs3b') X=H.bi+H.bs;
+      X=Math.min(X, H.bi+H.bs); amt=r1(X-H.bi); put('b',amt); H.raises++;
+      act = H.bs===0 ? 'allin' : 'raise';
+    } else if (act==='call'){ amt=put('b', Math.min(toCall,H.bs)); }
+  } else {
+    const S=H.S, s=S[H.bci];
+    if (toCall<=0){
+      const pb=polFirst(bot,s,H.street);
+      act = Math.random()<pb ? 'bet' : 'check';
+      for (let i=0;i<1326;i++) if (H.W[i]>0){ const q=polFirst(bot,S[i],H.street); H.W[i]*= act==='bet'?q:1-q; }
+      if (act==='bet'){ let X=r1(Math.max(1, bot.pp.size*H.pot)); if (X>=.8*H.bs) X=H.bs; amt=put('b',X); H.raises++; if (H.bs===0) act='allin'; }
+    } else {
+      const callAmt=Math.min(toCall,H.bs), req=callAmt/(H.pot+callAmt), canRaise = H.raises<2 && H.bs>toCall && H.hs>0;
+      const cf=H.bs>0?callAmt/H.bs:1, pol=polFacing(bot,s,req,canRaise,cf); const x=Math.random();
+      act = x<pol.f ? 'fold' : x<pol.f+pol.c ? 'call' : 'raise';
+      for (let i=0;i<1326;i++) if (H.W[i]>0){ const q=polFacing(bot,S[i],req,canRaise,cf); H.W[i]*= act==='fold'?q.f:act==='call'?q.c:q.r; }
+      if (act==='call') amt=put('b',callAmt);
+      if (act==='raise'){ let X=r1(3*H.hi); if (X-H.bi>=.8*H.bs) X=H.bi+H.bs; amt=put('b',X-H.bi); H.raises++; if (H.bs===0) act='allin'; }
+    }
+  }
+  const nm=bot.short;
+  if (act==='fold'){ text=`${nm}: пас`; say(pick(bot.fold)); }
+  else if (act==='check'){ text=`${nm}: чек`; SFX.check(); if (Math.random()<.4) say(pick(bot.check),1600); }
+  else if (act==='call'){ text=`${nm}: колл ${num(amt)} BB`; SFX.chips(); if (Math.random()<.5) say(pick(bot.call),1600); }
+  else if (act==='bet'){ text=`${nm}: ставка ${num(H.bi)} BB`; SFX.chips(); if (Math.random()<.6) say(pick(bot.bet),1600); }
+  else if (act==='raise'){ text=`${nm}: рейз до ${num(H.bi)} BB`; SFX.chips(); say(pick(bot.raise),1600); }
+  else if (act==='allin'){ text=`${nm}: ОЛЛ-ИН ${num(H.bi)} BB`; SFX.chips(); say(pick(bot.shoveTalk),1800); }
+  logMsg(text); fullRender();
+  await sleep(450);
+  return act==='fold' ? 'fold' : act;
+}
+
+// ---------- hero options & EV ----------
+function heroOptions(){
+  const toCall=r1(H.bi-H.hi), opts=[], P=H.pot;
+  const addAggr=(label, X, kind, short)=>{ X=r1(Math.min(X, H.hi+H.hs)); if (X<=H.bi) return; if (opts.some(o=>Math.abs(o.X-X)<.05)) return; const allin=Math.abs(X-(H.hi+H.hs))<.05; opts.push({kind: allin?'allin':kind, label: allin?'Олл-ин':label, short: allin?'Олл-ин':short, X}); };
+  if (H.street===0){
+    if (H.raises===0 || (H.raises===0 && toCall>0)){ // hero first in (no limps)
+      opts.push({kind:'fold', label:'Фолд'});
+      const o=openSize(H.heroIdx); addAggr(`Рейз ${num(o)}`, o, 'raise', `Рейз`); addAggr(`Рейз ${num(o+1)}`, o+1, 'raise', 'Рейз'); addAggr('Олл-ин', H.hi+H.hs, 'allin');
+    } else {
+      opts.push({kind:'fold', label:'Фолд'}); opts.push({kind:'call', label:`Колл ${num(Math.min(toCall,H.hs))}`, c:Math.min(toCall,H.hs)});
+      if (H.bs>0 && H.hs>toCall){
+        if (H.raises===1) addAggr(`3-бет ${num(3*H.bi)}`, r1(3*H.bi), 'raise', '3-бет');
+        if (H.raises<=2) addAggr('Олл-ин', H.hi+H.hs, 'allin');
+      }
+    }
+  } else if (toCall<=0){
+    opts.push({kind:'check', label:'Чек'});
+    for (const [f,l] of [[1/3,'⅓'],[.5,'½'],[.75,'¾'],[1,'Банк']]) addAggr(`Ставка ${l}`, r1(Math.max(1,f*P)), 'bet', l);
+    addAggr('Олл-ин', H.hi+H.hs, 'allin');
+  } else {
+    opts.push({kind:'fold', label:'Фолд'}); opts.push({kind:'call', label:`Колл ${num(Math.min(toCall,H.hs))}`, c:Math.min(toCall,H.hs)});
+    if (H.raises<2 && H.hs>toCall && H.bs>0) addAggr(`Рейз ${num(3*H.bi)}`, r1(3*H.bi), 'raise', 'Рейз ×3');
+    if (H.hs>toCall && H.bs>0 && H.raises<3) addAggr('Олл-ин', H.hi+H.hs, 'allin');
+  }
+  return opts;
+}
+function evalOptions(opts){
+  const w=normW(), E=H.EQ, P=H.pot, toCall=r1(H.bi-H.hi), bot=H.bot;
+  let eqR=0; for (let i=0;i<1326;i++) if (w[i]>0) eqR+=w[i]*E[i];
+  const R = H.street===0 ? (H.heroIP?.95:.85) : 1;
+  // rough value of later streets: when ahead you win more later, when behind you can still fold (losses are capped)
+  const Fp=[.15,.3,.2,0][H.street], Fm=[.05,.08,.05,0][H.street];
+  const fut = (eq, rem) => (eq-.5)*(eq>.5?Fp:Fm)*Math.max(0,rem);
+  for (const o of opts){
+    if (o.kind==='fold'){ o.ev=0; continue; }
+    if (o.kind==='call'){ const c=o.c, Peff=P-(toCall-c), allin=c>=H.hs-1e-9 || H.bs===0; const RR = (H.street===0 && !allin) ? R : 1;
+      const rem=allin?0:Math.min(H.hs-c, H.bs);
+      let s=0; for (let i=0;i<1326;i++) if (w[i]>0) s+=w[i]*(E[i]*(Peff+c)*RR + fut(E[i],rem)); o.ev = s - c; continue; }
+    if (o.kind==='check'){
+      if (!H.acted.b && H.street>0){ const b=r1(Math.max(1, Math.min(bot.pp.size*P, H.bs, H.hs)));
+        const rem0=Math.min(H.hs,H.bs), rem1=Math.min(H.hs-b,H.bs-b);
+        let a=0, cb=0; for (let i=0;i<1326;i++) if (w[i]>0){ const pb=polFirst(bot,H.S[i],H.street); a+=w[i]*(1-pb)*(E[i]*P+fut(E[i],rem0)); cb+=w[i]*pb*(E[i]*(P+2*b)-b+fut(E[i],rem1)); }
+        o.ev = a + Math.max(0,cb); o.checkBet=b;
+      } else { const rem0=Math.min(H.hs,H.bs); let s=0; for (let i=0;i<1326;i++) if (w[i]>0) s+=w[i]*(E[i]*P+fut(E[i],rem0)); o.ev=s; }
+      continue; }
+    // aggressive: bet / raise / allin to street total X
+    const X=o.X, add=r1(X-H.hi), botNeed=r1(X-H.bi), botCall=Math.min(botNeed,H.bs), addEff=r1(H.bi+botCall-H.hi);
+    const rem=Math.min(H.hs-addEff, H.bs-botCall);
+    let ev=0, pf=0;
+    if (H.street===0){
+      let ctx; if (add>=H.hs-1e-9) ctx='vsAllin'; else if (H.raises===0) ctx='vsOpen'; else if (H.raises===1) ctx='vs3b'; else ctx='vsAllin';
+      const potOdds = botNeed < .4*(P+add+botNeed), depth=Math.min(H.hs+H.hi, H.bs+H.bi);
+      PF_NEED = botCall/(P+add+botCall);
+      const RR = ctx==='vsAllin' ? 1 : R;
+      // if the bot re-raises all-in, hero then calls or folds — whichever is better against that range
+      const Eff=Math.min(H.hs+H.hi, H.bs+H.bi), potAI=P+(Eff-H.hi)+(Eff-H.bi), riskAI=Eff-H.hi;
+      let rrFold=0, rrCall=0;
+      for (let i=0;i<1326;i++) if (w[i]>0){ const a=pfRule(bot,ctx,CMB_CLS[i],H.botIdx,potOdds,depth);
+        if (a==='fold'){ ev+=w[i]*P; pf+=w[i]; }
+        else if (a==='call' || ctx==='vsAllin'){ ev+=w[i]*(E[i]*(P+addEff+botCall)*RR - addEff + fut(E[i],rem)); }
+        else { rrFold+=w[i]*(-add); rrCall+=w[i]*(E[i]*potAI-riskAI); } }
+      ev+=Math.max(rrFold, rrCall);
+    } else {
+      const req=botCall/(P+add+botCall), canRaise=(H.raises+1)<2 && H.bs>botNeed && (H.hs-add)>0, cf=H.bs>0?botCall/H.bs:1;
+      // if the bot raises (to ~3x), hero then calls or folds — whichever is better against those hands
+      let Y=r1(3*X); if (Y-H.bi>=.8*H.bs) Y=H.bi+H.bs; Y=Math.min(Y,H.bi+H.bs);
+      const extra=Math.max(0,Math.min(Y-X, H.hs-add)), potR=P+add+(Math.min(Y,X+extra)-H.bi)+extra;
+      let rrFold=0, rrCall=0;
+      for (let i=0;i<1326;i++) if (w[i]>0){ const q=polFacing(bot,H.S[i],req,canRaise,cf);
+        ev+=w[i]*(q.f*P + q.c*(E[i]*(P+addEff+botCall)-addEff+fut(E[i],rem))); pf+=w[i]*q.f;
+        if (q.r>0){ rrFold+=w[i]*q.r*(-add); rrCall+=w[i]*q.r*(E[i]*potR-(add+extra)); } }
+      ev+=Math.max(rrFold, rrCall);
+    }
+    o.ev=ev; o.pf=pf;
+  }
+  return {eqR, w};
+}
+function gradeFull(opts, ci, hint, eqR){
+  const soft=LV[CFG.level].soft, P=Math.max(H.pot,2.5);
+  let bi=0; opts.forEach((o,i)=>{ if (o.ev>opts[bi].ev) bi=i; });
+  const loss=Math.max(0, opts[bi].ev-opts[ci].ev), lossRel=loss/P;
+  const sorted=opts.map(o=>o.ev).sort((a,b)=>b-a), margin=sorted.length>1?sorted[0]-sorted[1]:0;
+  let g;
+  if (loss<1e-6){
+    const k=opts[ci].kind, counter=((k==='bet'||k==='raise'||k==='allin') && eqR<.4) || (k==='fold' && eqR>.42) || (k==='call' && eqR<.35);
+    g = (!hint && counter && margin>=Math.max(.5,.1*P)) ? 'brilliant' : 'best';
+  } else if (loss<.15 || lossRel<.04*soft) g='good'; else if (lossRel<.12*soft) g='inacc'; else if (lossRel<.3*soft) g='mistake'; else g='blunder';
+  return {g, bi, loss, lossRel, acc: loss<1e-6?100:Math.round(100*Math.exp(-lossRel/(.2*soft)))};
+}
+function classGrid(w){ const g=new Float32Array(169); let mx=0; for (let i=0;i<1326;i++) if (w[i]>0) g[CMB_CLS[i]]+=w[i]/COMBOS[CMB_CLS[i]]; for (let c=0;c<169;c++) mx=Math.max(mx,g[c]); if (mx>0) for (let c=0;c<169;c++) g[c]/=mx; return g; }
+
+function hintFull(opts, eqR){
+  const toCall=r1(H.bi-H.hi), l=[];
+  if (toCall>0){ const c=Math.min(toCall,H.hs); l.push(`Колл ${num(c)} BB в банк ${num(H.pot)} BB — нужно не меньше <b>${pct(c/(H.pot+c))}</b> шансов.`); }
+  l.push(`У тебя около <b>${pct(eqR)}</b> против его вероятных рук.`);
+  const half=opts.find(o=>o.kind==='bet'&&o.short==='½') || opts.find(o=>o.pf!=null);
+  if (half && half.pf!=null) l.push(`На ставку «${half.short||half.label}» он сбросит примерно в ${pct(half.pf)} случаев.`);
+  l.push(H.bot.tip2);
+  return l.join(' ');
+}
+
+async function heroAct(){
+  const opts=heroOptions(); const {eqR, w}=evalOptions(opts); const lv=LV[CFG.level];
+  setHeroEq('шансы', eqR, lv.showEq || !!(H.opts&&H.opts.sonar));
+  const main=[], sizes=[];
+  opts.forEach((o,i)=>{
+    if (o.kind==='fold') main.push({html:'Фолд', v:i, cls:'fold'});
+    else if (o.kind==='check') main.push({html:'Чек', v:i, cls:'mid'});
+    else if (o.kind==='call') main.push({html:`Колл<small>${num(o.c)} BB</small>`, v:i, cls:'mid'});
+    else sizes.push({html:`${o.kind==='allin'?'Олл-ин':o.short}<small>${num(o.X)} BB</small>`, v:i, cls:o.kind==='allin'?'allin':''});
+  });
+  const toCallNow=r1(H.bi-H.hi);
+  renderActions(main, sizes, ()=>hintFull(opts,eqR), H.street===0 ? (H.raises>=1?'Рейз':'Рейз') : (toCallNow>0?'Рейз':'Ставка'));
+  setBusy(false);
+  const ci=await waitAction(); if (ci==='__abort') throw ABORT;
+  setBusy(true); lockActions();
+  const hint=state.hintUsed; state.hintUsed=false;
+  if (H.street===0){ HERO_SHOVE.n++; if (opts[ci].kind==='allin') HERO_SHOVE.s++; }
+  const gr=gradeFull(opts, ci, hint, eqR);
+  const o=opts[ci], toCall=r1(H.bi-H.hi);
+  H.decisions.push({street:H.street, opts:opts.map(x=>({label:x.label, kind:x.kind, ev:x.ev, pf:x.pf})), ci, ...gr, eqR, P:H.pot, toCall:Math.min(toCall,H.hs), grid:classGrid(w), share:rangeShare(w), hint, board:H.board.slice()});
+  miniBadge(gr.g); if (gr.g==='brilliant'||gr.g==='blunder') gradeEffects(gr.g); else SFX[gr.g]();
+  // apply
+  let text;
+  if (o.kind==='fold'){ text='Ты: пас'; $('hCards').querySelectorAll('.card').forEach(c=>c.classList.add('dim')); }
+  else if (o.kind==='check'){ text='Ты: чек'; SFX.check(); }
+  else if (o.kind==='call'){ put('h',o.c); text=`Ты: колл ${num(o.c)} BB`; SFX.chips(); }
+  else { put('h', r1(o.X-H.hi)); H.raises++; text = o.kind==='allin'?`Ты: ОЛЛ-ИН ${num(H.hi)} BB`:`Ты: ${o.kind==='bet'?'ставка':'рейз до'} ${num(H.hi)} BB`; SFX.chips(); }
+  logMsg(text); fullRender(); await sleep(500);
+  return o.kind==='fold' ? 'fold' : o.kind;
+}
+function rangeShare(w){ // effective share of all hands still in bot's range
+  let s=0, s2=0; for (let i=0;i<1326;i++) if (w[i]>0){ s+=w[i]; s2+=w[i]*w[i]; } return s2>0 ? Math.min(1,(s*s/s2)/1326) : 1;
+}
+
+async function finishFull(outcome){
+  const vEls=[...$('vCards').children];
+  let r=0;
+  vEls.forEach((e,i)=>{ e.replaceWith(cardEl(H.bc[i],true,false)); });
+  { const ve=[...$('vCards').children]; await sleep(250); for (const e of ve){ e.classList.remove('down'); SFX.flip(); await sleep(140); } }
+  if (outcome==='heroFold'){ banner(`${H.bot.short} забирает банк`,'var(--bad)'); SFX.lose(); H.bs=r1(H.bs+H.pot); }
+  else if (outcome==='botFold'){ banner('Банк твой','var(--accent)'); SFX.win(); H.hs=r1(H.hs+H.pot); }
+  else {
+    if (H.board.length<5){
+      $('eqbar').classList.add('on'); setEqBar(equityKnown(H.hc,H.bc,H.board), H.bot.short); await sleep(1000);
+      while (H.board.length<5){ const n=H.board.length===0?3:1; $('street').textContent=STREETS[H.board.length===0?1:H.board.length-1];
+        for (let k=0;k<n;k++){ const c=H.deck.pop(); placeBoardCard(H.board.length,c); H.board.push(c); SFX.deal(); await sleep(170); }
+        const eq=equityKnown(H.hc,H.bc,H.board); setEqBar(eq,H.bot.short); await sleep(H.board.length===5?600:1200); }
+    }
+    r=cmpHands(H.hc,H.bc,H.board);
+    if (r>0){ H.hs=r1(H.hs+H.pot); banner(`Выиграл · ${catName([...H.hc,...H.board])}`,'var(--accent)'); SFX.win(); $('hCards').querySelectorAll('.card').forEach(c=>c.classList.add('win')); say(pick(H.bot.lose)); }
+    else if (r<0){ H.bs=r1(H.bs+H.pot); banner(`Проиграл · ${catName([...H.bc,...H.board])}`,'var(--bad)'); SFX.lose(); [...$('vCards').children].forEach(c=>c.classList.add('win')); say(pick(H.bot.win)); }
+    else { H.hs=r1(H.hs+H.pot/2); H.bs=r1(H.bs+H.pot/2); banner('Делёж банка','var(--ink)'); }
+  }
+  H.pot=0; H.hi=0; H.bi=0; fullRender();
+  await sleep(1500);
+  const D=H.decisions, acc=D.length? Math.round(D.reduce((a,d)=>a+d.acc,0)/D.length) : 100;
+  let key=-1, mx=0; D.forEach((d,i)=>{ if (d.loss>mx+1e-9){ mx=d.loss; key=i; } });
+  const g=gradeFromAcc(acc, D.some(d=>d.g==='brilliant'));
+  return {mode:'full', g, acc, bb:r1(H.hs-H.heroStart), decisions:D, key, hc:H.hc, bc:H.bc, board:H.board.slice(), bot:H.bot, outcome:outcome==='heroFold'?'fold':outcome==='botFold'?'steal':(r>0?'win':r<0?'lose':'split'),
+    heroPos:H.heroPos, botPos:H.botPos, heroStart:H.heroStart, heroEnd:H.hs, botFolded:outcome==='botFold', label:CNAME[H.hcls], chipsOk: Math.abs((H.hs+H.bs)-H.totalChips)<.05};
+}
+
+// ---------- full review: 3 layers ----------
+function memeFull(rec){
+  const good=rec.acc>=85, o=rec.outcome;
+  if (o==='steal') return good?'Соперник сдался — и сыграно чисто.':'Соперник сбросил… но местами повезло.';
+  if (o==='fold') return good?'Вовремя сбросил — это тоже победа.':'Сбросил, но где-то раньше уже потерял.';
+  if (o==='split') return 'Поделили банк.';
+  if (good && o==='lose') return 'Сыграл почти идеально — и проиграл. Это покер.';
+  if (good && o==='win') return 'Чисто и прибыльно. Красота.';
+  if (!good && o==='win') return 'Ошибки были, но затащил. Удача — не стратегия.';
+  return 'И ошибки, и проигрыш. Разберём, где свернул не туда.';
+}
+function decisionHtml(rec, i){
+  const d=rec.decisions[i]; if (!d) return '<p class="explain" style="margin-top:8px">В этой раздаче решать ничего не пришлось.</p>';
+  const ch=d.opts[d.ci], best=d.opts[d.bi];
+  const alt = d.ci===d.bi ? d.opts.map((o,k)=>({o,k})).filter(x=>x.k!==d.ci).sort((a,b)=>b.o.ev-a.o.ev)[0] : {o:best,k:d.bi};
+  let vt, vn, cls;
+  if (d.loss<1e-6){ vt = d.g==='brilliant' ? `${ch.label} — смело и точно!` : `${ch.label} — лучший ход.`; vn = alt ? `выгоднее альтернативы на ${num(ch.ev-alt.o.ev)} BB` : ''; cls='good'; }
+  else { vt=`Лучше было: ${best.label.toLowerCase()}.`; vn=`${fmt(-d.loss)} BB · 100 раз = ${fmt(Math.round(-d.loss*100))} BB`; cls='bad'; }
+  const box=(o,isBest,tag)=>`<div class="evbox${isBest?' best':''}"><div class="k">${tag}${isBest?'<em>лучше</em>':''}</div><div class="a">${o.label}</div><div class="v">${fmt(o.ev)} BB</div><div class="d">в среднем</div><div class="h">${hundred(o.ev)}</div></div>`;
+  const l=[];
+  if (d.toCall>0) l.push(`<p>Колл ${num(d.toCall)} BB в банк ${num(d.P)} BB — нужно не меньше <b>${pct(d.toCall/(d.P+d.toCall))}</b> шансов. У тебя около <b>${pct(d.eqR)}</b> против его вероятных рук.</p>`);
+  else l.push(`<p>В банке ${num(d.P)} BB. У тебя около <b>${pct(d.eqR)}</b> против его вероятных рук.</p>`);
+  const k=best.kind;
+  if (k==='fold') l.push(`<p>Лучше сбросить: шансов не хватает, колл в долгую теряет фишки.</p>`);
+  else if (k==='call') l.push(`<p>Колл окупается: шансов больше, чем стоит колл.</p>`);
+  else if (k==='check') l.push(`<p>Ставить невыгодно: рука хуже почти не заплатит, а сильнее — не сбросит.</p>`);
+  else if (d.eqR>.58) l.push(`<p>Ты впереди — ставка за вэлью: он заплатит рукой хуже${best.pf!=null?` (сбросит лишь ~${pct(best.pf)})`:''}.</p>`);
+  else l.push(`<p>Ставка работает за счёт сбросов: он сдастся примерно в ${pct(best.pf||0)} случаев, а когда платит — у тебя ещё есть шансы.</p>`);
+  l.push(`<p class="tip">${rec.bot.tip2}</p>`);
+  const optl=d.opts.map((o,k)=>`<div class="${k===d.bi?'best':''} ${k===d.ci?'me':''}"><span>${o.label}${k===d.ci?' · твой':''}${o.pf!=null&&o.kind!=='call'?` <i style="opacity:.7;font-style:normal">(сбросит ${pct(o.pf)})</i>`:''}</span><span>${fmt(o.ev)} BB</span></div>`).join('');
+  const grid=gridHtml(c=>{ const v=d.grid[c]; return v>.02 ? {cls:'sh', style:`background:rgba(126,108,158,${.25+.75*v})`} : {}; }, -1);
+  return `
+    <div class="dtitle">${badgeHtml(d.g)}<span>${STREETS[d.street][0].toUpperCase()+STREETS[d.street].slice(1)}: ${ch.label}</span></div>
+    <div class="l1" style="padding-top:2px"><div class="verdict"><div class="vt" style="font-size:17px">${vt}</div>${vn?`<div class="vn ${cls}">${vn}</div>`:''}${d.hint?'<div class="vs">с подсказкой</div>':''}</div></div>
+    <button class="toggle"><span>Почему так</span><span>▾</span></button>
+    <div class="layer"><div class="evrow">${box(ch,d.ci===d.bi,'Твой ход')}${alt?box(alt.o,alt.k===d.bi,d.ci===d.bi?'Альтернатива':'Лучший'):''}</div><div class="explain">${l.join('')}</div></div>
+    <button class="toggle"><span>Вся математика</span><span>▾</span></button>
+    <div class="layer"><div class="math"><p>Все варианты в этот момент (в среднем, от текущего стека):</p><div class="optlist">${optl}</div>
+      <p style="color:var(--mute)">Это оценка тренера: шансы против вероятных рук соперника, цена колла и как часто он сбрасывает на ставку — с учётом его характера. Идеальная теория покера сложнее, но направление решений это показывает честно.</p></div>
+      <div class="gridwrap"><div class="gridtitle">Вероятные руки соперника в этот момент — примерно ${Math.max(1,Math.round(d.share*100))}% всех рук</div>${grid}<div class="legend"><span style="--c:#7E6C9E">чем темнее — тем вероятнее</span></div></div></div>`;
+}
+function reviewFullHtml(rec){
+  const tl=rec.decisions.map((d,i)=>`<button class="tl" data-i="${i}">${i===rec.key?'<span class="key">дорого</span>':''}<span class="st">${ST_SHORT[d.street]}</span>${badgeHtml(d.g)}<span class="ac">${d.opts[d.ci].label}</span></button>`).join('');
+  return `
+    <div class="l1">${markHtml(rec.g)}<div class="verdict"><div class="vt">Точность ${rec.acc}%</div><div class="vn ${rec.bb>=0?'good':'bad'}">${fmt(rec.bb)} BB за раздачу</div><div class="vs">Решений: ${rec.decisions.length}. Нажми на любое — увидишь разбор.</div></div></div>
+    <div class="result">${memeFull(rec)}
+      <div class="handline"><span>Ты (${rec.heroPos}): <b>${cardsHtml(rec.hc)}</b></span><span>${rec.bot.short} (${rec.botPos}): <b>${cardsHtml(rec.bc)}</b></span>${rec.board.length?`<span>Борд: <b>${cardsHtml(rec.board)}</b></span>`:''}</div></div>
+    <div class="timeline">${tl}</div>
+    <div id="dBox"></div>`;
+}
+function wireFullReview(root, rec){
+  const sel=i=>{ root.querySelectorAll('.tl').forEach(t=>t.classList.toggle('on', +t.dataset.i===i)); const b=root.querySelector('#dBox'); b.innerHTML=decisionHtml(rec,i); wireLayers(b); };
+  root.querySelectorAll('.tl').forEach(t=>t.onclick=()=>sel(+t.dataset.i));
+  sel(rec.key>=0?rec.key:0);
+}
+
+// ======================= SEEDED RANDOM (for duels) =======================
+const NATIVE_RANDOM = Math.random;
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function seedHand(seed, i){ Math.random = mulberry32((seed ^ Math.imul(i+1, 0x9E3779B1))>>>0); }
+function unseed(){ Math.random = NATIVE_RANDOM; }
+
+// ======================= DUEL CODE =======================
+const ALPH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function encodeDuel(seed, acc, lvl){
+  let v = BigInt(seed>>>0 & 0x1FFFFFFF) | (BigInt(acc&127)<<29n) | (BigInt(lvl&1)<<36n);
+  const chk = (v*2654435761n) % 8n; v |= chk<<37n;
+  let s=''; for (let i=0;i<8;i++){ s=ALPH[Number(v & 31n)]+s; v>>=5n; }
+  return s.slice(0,4)+'-'+s.slice(4);
+}
+function decodeDuel(code){
+  const s=(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/O/g,'0').replace(/I/g,'1');
+  if (s.length!==8) return null;
+  let v=0n; for (const ch of s){ const k=ALPH.indexOf(ch); if (k<0) return null; v=(v<<5n)|BigInt(k); }
+  const chk=(v>>37n)&7n, body=v & ((1n<<37n)-1n);
+  if ((body*2654435761n)%8n!==chk) return null;
+  return {seed:Number(body & 0x1FFFFFFFn), acc:Number((body>>29n)&127n), lvl:Number((body>>36n)&1n)};
+}
+
+// ======================= DUEL =======================
+async function runDuel(challenge){
+  const seed = challenge ? challenge.seed : (Math.floor(NATIVE_RANDOM()*0x1FFFFFFF)>>>0);
+  if (challenge) CFG.level = challenge.lvl ? 'pro' : 'novice';
+  const recs = await runSeries({mode:'short', len:10, seed, label: challenge?'Дуэль: ответ на вызов':'Дуэль: твой вызов'});
+  if (!recs) return;
+  const acc=Math.round(recs.reduce((a,r)=>a+r.acc,0)/recs.length);
+  const code=encodeDuel(seed, acc, CFG.level==='pro'?1:0);
+  const R=$('result'); let html;
+  if (challenge){
+    const me=acc, him=challenge.acc, mood = me>him?'happy':me<him?'sad':'think';
+    const verdict = me>him ? 'Победа! Ты решил точнее.' : me<him ? 'Поражение. Друг решил точнее.' : 'Ничья — точность одинаковая.';
+    state.share=`Дуэль в «Пуш или Фолд»: я — ${me}%, ты — ${him}%. ${me>him?'Я выиграл 😎':me<him?'Ты выиграл, реванш?':'Ничья!'} Код дуэли: ${code}`;
+    html=`<div class="card2" style="text-align:center"><div class="lbl">Дуэль · одинаковые 10 раздач</div>
+      <div style="display:flex;justify-content:center;margin:10px 0">${mascotSvg(mood,96)}</div>
+      <div class="vs"><div><div class="who">ТЫ</div><div class="n">${me}%</div></div><div class="x">vs</div><div><div class="who">ДРУГ</div><div class="n">${him}%</div></div></div>
+      <div class="vt" style="font-size:20px;font-weight:800;margin-top:12px">${verdict}</div>
+      <div class="verdict2" style="margin-top:6px">Сравнивается точность решений, а не выигранные фишки — удача тут не помогает.</div></div>`;
+  } else {
+    state.share=`Вызываю тебя на дуэль в «Пуш или Фолд»! Открой игру → «Дуэль» → «Принять вызов» и введи код ${code}. Мой результат — ${acc}%. Сможешь лучше?`;
+    html=`<div class="card2" style="text-align:center"><div class="lbl">Дуэль · твой результат</div>
+      <div style="display:flex;justify-content:center;margin:10px 0">${mascotSvg(acc>=80?'happy':acc>=55?'think':'sad',96)}</div>
+      <div class="bignum">${acc}%</div>
+      <div class="verdict2" style="margin:8px 0 14px">Отправь другу код. Он получит те же 10 раздач, и вы сравните точность.</div>
+      <div class="codebox">${code}</div></div>`;
+  }
+  html+=`<button class="big-btn" id="rCopy">${challenge?'Скопировать результат':'Скопировать вызов для друга'}</button>
+    <div class="row"><button class="ghost-btn" id="rReview">Разбор раздач</button><button class="ghost-btn" id="rMenu">В меню</button></div>`;
+  R.innerHTML=html; show('result');
+  $('rCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(state.share); toast('Скопировано — отправь другу'); }catch(e){ toast('Не удалось скопировать. Код: '+code); } };
+  $('rReview').onclick=()=>{ showSummary(true); };
+  $('rMenu').onclick=()=>{ show('start'); renderStart(); };
+}
+
+// ======================= AQUARIUM =======================
+const DEPTHS=['Мелководье','Риф','Бездна'];
+const PERKS={
+  xray:{t:'Рентген', d:'В первой раздаче каждого стола видишь одну карту соперника.', i:'<circle cx="12" cy="12" r="3"/><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/>'},
+  sonar:{t:'Эхолот', d:'Шансы видны всегда. Цена: все подсказки пропадают.', i:'<path d="M12 20a8 8 0 0 0 8-8M12 16a4 4 0 0 0 4-4"/><circle cx="12" cy="12" r="1.2"/><path d="M4 12a8 8 0 0 1 8-8"/>'},
+  buoy:{t:'Спасательный круг', d:'Один раз спасёт от вылета: вернёт 8 BB.', i:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M6 6l3.5 3.5M18 6l-3.5 3.5M6 18l3.5-3.5M18 18l-3.5-3.5"/>'},
+  pearl:{t:'Жемчужина', d:'Сразу +8 BB. Цена: следующий соперник на 20% агрессивнее.', i:'<path d="M4 13c2-6 14-6 16 0-3 5-13 5-16 0z"/><circle cx="12" cy="11.5" r="2.6"/>'},
+  hints:{t:'Шпаргалка', d:'+2 подсказки на забег.', i:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'},
+  nose:{t:'Акулий нюх', d:'+1 BB за «Акулу» или «Кракена». Цена: −2 BB за каждую «Наживку».', i:'<path d="M6 16.5c2.2-1.4 3.6-8.4 9-11-1 4.2-.2 8 2 11"/><path d="M2 18.6c2 1.2 4 1.2 6 0s4-1.2 6 0 4 1.2 6 0"/>'},
+};
+const BLINDS=[1,1.5,2];
+// bots get sharper with depth: fold less to pressure, defend more preflop
+function sharpen(b, depth, aggro){
+  b=JSON.parse(JSON.stringify(b));
+  b.pp.commit*=.6; b.pp.base=Math.max(0,b.pp.base-.04*depth); b.pp.slope=Math.max(.3,b.pp.slope-.08*depth);
+  b.pp.bluff=b.pp.bluff+(.15-b.pp.bluff)*.4*depth/2; b.pp.rb=b.pp.rb+(.2-b.pp.rb)*.4*depth/2;
+  b.pf.call+=.05*depth; b.pf.tb+=.02*depth; b.pf.c3+=.05*(depth+1); b.pf.cai+=.03*(depth+1);
+  if (aggro){ b.pp.bluff*=1.2; b.pp.rb*=1.2; b.pp.raiseT-=.03; b.pp.val-=.03; b.pf.tb*=1.2; b.pf.open=Array.isArray(b.pf.open)?b.pf.open.map(x=>x*1.2):b.pf.open*1.2; }
+  return b;
+}
+const isvg = p => `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+function bossOf(depth){
+  const clone=b=>JSON.parse(JSON.stringify(b));
+  if (depth===0){ const b=clone(BOTS[2]); b.boss=true; b.tag='босс · блефует на каждом ривере'; b.pp.rb=.6; b.pf.call+=.08; return b; }
+  if (depth===1){ const b=clone(BOTS[0]); b.boss=true; b.tag='босс · почти никогда не сбрасывает'; b.pp.base=0; b.pp.slope=.3; b.pp.commit=.05; return b; }
+  return clone(MEGALODON);
+}
+function aquaBest(){ try{ return JSON.parse(localStorage.getItem('pf_aqua_best')||'null'); }catch(e){ return null; } }
+function saveAquaBest(table, stack){ const b=aquaBest(); if (!b || table>b.table || (table===b.table && stack>b.stack)){ try{ localStorage.setItem('pf_aqua_best', JSON.stringify({table, stack:r1(stack)})); }catch(e){} return true; } return false; }
+
+let RUN=null;
+function newRun(){
+  const tables=[];
+  for (let d=0;d<3;d++){ for (let k=0;k<2;k++){ const b=JSON.parse(JSON.stringify(pick(BOTS))); tables.push({bot:b, boss:false, depth:d}); } tables.push({bot:bossOf(d), boss:true, depth:d}); }
+  RUN={stack:30, table:0, tables, perks:{}, buoyUsed:false, aggroNext:false};
+  state.results=[]; state.hintsLeft=LV[CFG.level].hints; state.running=true;
+}
+function aquaAcc(){ const D=state.results; return D.length? Math.round(D.reduce((a,r)=>a+r.acc,0)/D.length) : 0; }
+function hubHtml(title, sub){
+  let rows='';
+  for (let d=0;d<3;d++){
+    let b='';
+    for (let k=0;k<3;k++){ const i=d*3+k, t=RUN.tables[i]; const cls = i<RUN.table?'done':i===RUN.table?'cur':(t.boss?'todo':''); b+=(k?'<div class="line"></div>':'')+`<div class="bub ${t.boss?'boss':''} ${cls}">${i<RUN.table?'✓':t.boss?t.bot.ini:i+1}</div>`; }
+    rows+=`<div class="depthrow"><div class="dn">${DEPTHS[d]}</div>${b}</div>`;
+  }
+  const best=aquaBest();
+  const perks=Object.keys(RUN.perks).map(k=>`<span class="perk">${PERKS[k].t}${k==='buoy'&&RUN.buoyUsed?' (использован)':''}</span>`).join('') || '<span class="levdesc">пока нет — их дают за пройденные столы</span>';
+  return `<div class="card2"><div class="lbl">Аквариум</div><div style="font-size:22px;font-weight:800;margin:6px 0 2px">${title}</div><div class="verdict2">${sub}</div></div>
+    <div class="card2"><div class="depth">${rows}</div></div>
+    <div class="card2"><div class="stat3"><div><b>${num(RUN.stack)}</b><span>стек, BB</span></div><div><b>${state.results.length?aquaAcc()+'%':'—'}</b><span>точность</span></div><div><b>${best?best.table+'/9':'—'}</b><span>рекорд, столов</span></div></div>
+      <div class="lbl" style="margin:14px 0 6px">Улучшения</div><div class="perks">${perks}</div></div>`;
+}
+function oppPreview(t){ return `<div class="card2" style="display:flex;align-items:center;gap:14px"><div class="ava ${t.boss?'boss':''}">${t.bot.ini}</div><div><div style="font-weight:800">${t.boss?'Босс: ':''}${t.bot.name}</div><div class="levdesc">${t.bot.tag}</div></div></div>`; }
+function waitClick(id){ return new Promise(r=>{ $(id).onclick=()=>r(); }); }
+
+async function runAqua(){
+  SFX.unlock(); newRun();
+  try {
+    const A=$('aqua');
+    A.innerHTML = hubHtml('Погружение', '9 столов на трёх глубинах, начинаешь с 30 BB. Стек переносится, глубже блайнды растут, а соперники умнеют. Боссов проходишь только с точностью от 70%, улучшения — только за боссов. Проиграешь стек — тебя съели.') + oppPreview(RUN.tables[0]) + `<button class="big-btn" id="aGo">Нырнуть</button><button class="ghost-btn" id="aMenu">В меню</button>`;
+    show('aqua'); $('aMenu').onclick=()=>{ RUN=null; state.running=false; show('start'); renderStart(); };
+    await waitClick('aGo');
+    while (RUN && RUN.table<9){
+      const t=RUN.tables[RUN.table], mul=BLINDS[t.depth];
+      const bot = sharpen(t.bot, t.depth, RUN.aggroNext); RUN.aggroNext=false;
+      const tableRecs=[];
+      for (let h=0; h<2; h++){
+        state.topText=`${DEPTHS[t.depth]} · стол ${RUN.table+1}/9${t.boss?' · босс':''} · раздача ${h+1}/2`; state.hintUsed=false;
+        if (RUN.perks.sonar) state.hintsLeft=0;
+        show('game'); renderDots();
+        const rec = await fullHand({bot, heroStack:RUN.stack, botStack: t.boss?50:30+rand(21), xray:!!RUN.perks.xray && h===0, sonar:!!RUN.perks.sonar, blindMul:mul});
+        RUN.stack = rec.heroEnd;
+        if (RUN.perks.nose){ const good=rec.decisions.filter(d=>d.g==='best'||d.g==='brilliant').length, bad=rec.decisions.filter(d=>d.g==='blunder').length;
+          const delta=good-2*bad; if (delta){ RUN.stack=r1(Math.max(0,RUN.stack+delta)); rec.bonus=delta; } }
+        state.results.push(rec); tableRecs.push(rec);
+        const r = await openReview(rec, 'Дальше');
+        if (r==='__abort') throw ABORT;
+        if (RUN.stack < 1){
+          if (RUN.perks.buoy && !RUN.buoyUsed){ RUN.buoyUsed=true; RUN.stack=8; toast('Спасательный круг: +8 BB'); }
+          else return aquaEnd(false);
+        }
+      }
+      RUN.table++;
+      let headline, line;
+      if (t.boss){
+        const accT = Math.round(tableRecs.reduce((a,r)=>a+r.acc,0)/tableRecs.length);
+        if (accT>=70){ RUN.stack=r1(RUN.stack+10); headline='Босс повержен!'; line=`Точность за стол ${accT}% — награда +10 BB. Теперь ${num(RUN.stack)} BB.`; }
+        else { RUN.stack=r1(Math.max(0,RUN.stack-10)); headline='Босс откусил кусок'; line=`Точность за стол ${accT}% — нужно было от 70%. Минус 10 BB, осталось ${num(RUN.stack)} BB.`; }
+        if (RUN.stack < 1){ if (RUN.perks.buoy && !RUN.buoyUsed){ RUN.buoyUsed=true; RUN.stack=8; toast('Спасательный круг: +8 BB'); } else { RUN.table--; return aquaEnd(false); } }
+      }
+      saveAquaBest(RUN.table, RUN.stack);
+      if (RUN.table>=9) return aquaEnd(true);
+      if (t.boss){
+        // perk choice only after a boss
+        const avail=Object.keys(PERKS).filter(k=>(!RUN.perks[k] || k==='pearl') && !(k==='hints'&&RUN.perks.sonar) && !(k==='sonar'&&RUN.perks.hints)); shuffle(avail); const offer=avail.slice(0,3);
+        A.innerHTML=`<div class="card2" style="text-align:center"><div style="display:flex;justify-content:center">${mascotSvg(headline==='Босс повержен!'?'happy':'think',90)}</div>
+          <div style="font-size:22px;font-weight:800;margin-top:6px">${headline}</div><div class="verdict2">${line}</div></div>
+          <div class="lbl">Выбери улучшение — следующее будет только после следующего босса</div><div class="pick">${offer.map(k=>`<button class="pickc" data-k="${k}"><div class="pi">${isvg(PERKS[k].i)}</div><div><div class="pt">${PERKS[k].t}</div><div class="pd">${PERKS[k].d}</div></div></button>`).join('')}</div>`;
+        show('aqua');
+        const k = await new Promise(res=>A.querySelectorAll('.pickc').forEach(b=>b.onclick=()=>res(b.dataset.k)));
+        if (k==='pearl'){ RUN.stack=r1(RUN.stack+8); RUN.aggroNext=true; } else RUN.perks[k]=true;
+        if (k==='hints') state.hintsLeft+=2;
+        if (k==='sonar') state.hintsLeft=0;
+      }
+      const nt=RUN.tables[RUN.table];
+      const sub = t.boss ? (nt.boss?'Впереди босс глубины.':`Новая глубина: блайнды ×${num(BLINDS[nt.depth])}, соперники играют аккуратнее.`)
+                         : nt.boss ? 'Стол пройден. Впереди босс: чтобы пройти его без потерь, нужна точность от 70%.' : 'Стол пройден. Следующий соперник уже за столом.';
+      A.innerHTML = hubHtml(`${DEPTHS[nt.depth]} · стол ${RUN.table+1}`, sub) + oppPreview(nt) + `<button class="big-btn" id="aGo">За стол</button><button class="ghost-btn" id="aMenu">Сдаться и выйти</button>`;
+      show('aqua');
+      $('aMenu').onclick=()=>{ aquaEnd(false, true); };
+      await waitClick('aGo');
+    }
+  } catch(e){ if (e!==ABORT){ console.error(e); toast('Ошибка: '+e.message); } }
+  finally { state.topText=null; }
+}
+function aquaEnd(win, quit){
+  state.topText=null; state.running=false;
+  const reached=RUN?RUN.table:0, stack=RUN?RUN.stack:0, acc=aquaAcc();
+  const rec = saveAquaBest(reached, stack);
+  const A=$('aqua');
+  const title = win ? 'Аквариум пройден! Ты — Мегалодон' : quit ? 'Ты всплыл' : 'Тебя съели';
+  const sub = win ? `Все 9 столов позади, в стеке ${num(stack)} BB.` : `Пройдено столов: ${reached} из 9 · глубина «${DEPTHS[Math.min(2,Math.floor(reached/3))]}».`;
+  state.share=`Аквариум в «Пуш или Фолд»: ${win?'прошёл все 9 столов':'дошёл до стола '+(reached+1)+' из 9'}, точность ${acc}%. Сможешь глубже?`;
+  A.innerHTML=`<div class="card2" style="text-align:center"><div style="display:flex;justify-content:center">${mascotSvg(win?'happy':'sad',110)}</div>
+    <div style="font-size:24px;font-weight:800;margin-top:6px">${title}</div><div class="verdict2">${sub}${rec?' Новый рекорд!':''}</div>
+    <div class="stat3" style="margin-top:14px"><div><b>${reached}/9</b><span>столов</span></div><div><b>${acc}%</b><span>точность</span></div><div><b>${state.results.length}</b><span>раздач</span></div></div></div>
+    <button class="big-btn" id="aAgain">Новый забег</button>
+    <div class="row"><button class="ghost-btn" id="aRev">Разбор раздач</button><button class="ghost-btn" id="aCopy">Скопировать</button></div>
+    <button class="ghost-btn" id="aMenu2">В меню</button>`;
+  show('aqua'); if (win) confetti();
+  $('aAgain').onclick=()=>runAqua();
+  $('aRev').onclick=()=>showSummary(true);
+  $('aCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(state.share); toast('Скопировано'); }catch(e){ toast('Не удалось скопировать'); } };
+  $('aMenu2').onclick=()=>{ show('start'); renderStart(); };
+  RUN=null;
+}
+
+// ======================= START SCREEN =======================
+const MODE_LIST=[
+  {id:'short', t:'Короткий стек', d:'3–20 BB. Олл-ин, колл или фолд. Точная математика.', i:'<path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z"/>'},
+  {id:'full', t:'Полная раздача', d:'25–60 BB. От префлопа до ривера, разбор каждого хода.', i:'<rect x="3.5" y="5" width="10" height="14" rx="2" transform="rotate(-8 8.5 12)"/><rect x="10.5" y="4.5" width="10" height="14" rx="2" transform="rotate(8 15.5 11.5)"/>'},
+  {id:'aqua', t:'Аквариум', d:'Забег через 9 столов и 3 босса. Стек переносится, проиграл — съели.', i:'<path d="M3 12c3-5 11-5 14 0-3 5-11 5-14 0z"/><path d="M17 12l4-3.4v6.8z"/><path d="M7.5 11h.01"/>', isNew:true},
+  {id:'duel', t:'Дуэль', d:'10 одинаковых раздач тебе и другу. Кто решит точнее.', i:'<path d="M5 19L15 9M9 5l10 10"/><path d="M14 4l6 6M4 14l6 6"/>', isNew:true},
+];
+function applyTheme(){ document.documentElement.dataset.theme=CFG.theme||'light'; $('btnTheme').innerHTML=(CFG.theme==='dark'?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg> Светлая тема':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg> Тёмная тема'); }
+function renderStart(){
+  if (!CFG.len.duel) CFG.len.duel=10;
+  $('mascotTop').innerHTML=mascotSvg('happy',56);
+  $('modes').innerHTML=MODE_LIST.map(m=>`<button class="mode${CFG.mode===m.id?' on':''}" data-mode="${m.id}">${m.isNew?'<span class="new">НОВОЕ</span>':''}<div class="mi">${isvg(m.i)}</div><div class="mt">${m.t}</div><div class="md">${m.d}</div></button>`).join('');
+  document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{ CFG.mode=b.dataset.mode; saveCfg(); renderStart(); });
+  document.querySelectorAll('#segLevel button').forEach(b=>b.classList.toggle('on', b.dataset.v===CFG.level));
+  $('levDesc').textContent=LV[CFG.level].desc;
+  const hasLen = CFG.mode==='short'||CFG.mode==='full';
+  $('lenRow').style.display = hasLen?'':'none';
+  $('duelRow').style.display = CFG.mode==='duel'?'':'none';
+  $('aquaInfo').style.display = CFG.mode==='aqua'?'':'none';
+  if (CFG.mode==='aqua'){ const b=aquaBest(); $('aquaInfo').textContent = b ? `Твой рекорд: ${b.table} из 9 столов.` : 'Ты ещё не нырял. Начни с 30 BB и посмотри, как глубоко получится зайти.'; }
+  if (hasLen){ const sl=$('segLen'); sl.innerHTML='';
+    for (const n of LENS[CFG.mode]){ const b=document.createElement('button'); b.textContent=n; b.classList.toggle('on', CFG.len[CFG.mode]===n); b.onclick=()=>{ CFG.len[CFG.mode]=n; saveCfg(); renderStart(); }; sl.appendChild(b); } }
+  $('btnStart').textContent = CFG.mode==='duel' ? 'Создать вызов' : CFG.mode==='aqua' ? 'Начать забег' : 'Играть';
+  applyTheme();
+}
+document.querySelectorAll('#segLevel button').forEach(b=>b.onclick=()=>{ CFG.level=b.dataset.v; saveCfg(); renderStart(); });
+
+// ======================= SERIES =======================
+// plays a series of hands; returns the records, or null if aborted
+async function runSeries(o){
+  SFX.unlock(); closeSheet();
+  state.results=[]; state.idx=0; state.hintsLeft=LV[CFG.level].hints; state.running=true; state.topText=null; state.dotsLen=o.len; state.seriesMode=o.mode;
+  show('game');
+  try {
+    for (let i=0;i<o.len;i++){
+      state.idx=i; renderDots();
+      if (o.seed!=null) seedHand(o.seed, i);
+      const rec = o.mode==='short' ? await shortHand() : await fullHand({});
+      unseed();
+      state.results.push(rec); renderDots();
+      const r = await openReview(rec, i===o.len-1 ? 'Итоги →' : 'Следующая раздача →');
+      if (r==='__abort') throw ABORT;
+    }
+    state.running=false; state.dotsLen=null; return state.results;
+  } catch(e){ unseed(); state.running=false; state.dotsLen=null; if (e!==ABORT){ console.error(e); toast('Ошибка: '+e.message); } return null; }
+}
+function openReview(rec, btnText, quiet){
+  if (rec.mode==='short'){
+    const p=openSheet(reviewShortHtml(rec), btnText, root=>wireShortReview(root,rec));
+    if (!quiet) gradeEffects(rec.g); return p;
+  }
+  const p=openSheet(reviewFullHtml(rec)+(rec.bonus?`<div class="result">Акулий нюх: <b>${fmt(rec.bonus)} BB</b></div>`:''), btnText, root=>wireFullReview(root,rec));
+  if (rec.g==='brilliant' && !quiet) confetti(); return p;
+}
+async function startSelected(){
+  if (state.running) return;
+  if (CFG.mode==='aqua') return runAqua();
+  if (CFG.mode==='duel') return runDuel(null);
+  const recs = await runSeries({mode:CFG.mode, len:CFG.len[CFG.mode]});
+  if (recs) showSummary();
+}
+
+function showSummary(back){
+  closeSheet(); show('summary');
+  const R=state.results; if (!R.length){ show('start'); return; }
+  const acc=Math.round(R.reduce((a,r)=>a+r.acc,0)/R.length), bb=R.reduce((a,r)=>a+r.bb,0);
+  $('sAcc').textContent=acc+'%';
+  $('sMascot').innerHTML=mascotSvg(acc>=85?'happy':acc>=60?'think':'sad',84);
+  const cnt={}; GORDER.forEach(k=>cnt[k]=0);
+  R.forEach(r=>{ if (r.mode==='short') cnt[r.g]++; else r.decisions.forEach(d=>cnt[d.g]++); });
+  $('sCounts').innerHTML=GORDER.map(k=>`<div class="cnt">${badgeHtml(k)}${GRADES[k].label}<b>${cnt[k]}</b></div>`).join('');
+  const v = acc>=95?'Мегалодон. Студент Паша нервно пересчитывает таблицы.' : acc>=85?'Акула. Артём одобрительно кивает.' : acc>=70?'Щука. Неплохо, но Дядя Слава уже потирает руки.' : 'Карась. Бабушка Зина предлагает покушать и попробовать ещё раз.';
+  $('sVerdict').textContent=v;
+  $('sBB').textContent=`По фишкам: ${fmt(bb)} BB — но считается точность, а не карты.`;
+  if (!back) state.share=`«Пуш или Фолд»: точность ${acc}% — ${v.split('.')[0]}. Сможешь лучше?`;
+  const h=$('sHist'); h.innerHTML='';
+  R.forEach((r,i)=>{ const b=document.createElement('button'); b.className='hitem'; let mid;
+    if (r.mode==='short'){ const sp=r.spot; mid=`<div class="mid">${CNAME[r.cls]} · ${sp.S} BB · ${sp.pos}<small>${sp.type==='open'?'ты первый':'против пуша: '+sp.bot.short}${sp.ante?'':' · без анте'} · ${r.action==='go'?(sp.type==='open'?'олл-ин':'колл'):'фолд'}</small></div>`; }
+    else mid=`<div class="mid">${cardsHtml(r.hc)} · ${r.heroPos} против ${r.bot.short}<small><span class="mb">${r.decisions.map(d=>badgeHtml(d.g)).join('')}</span> точность ${r.acc}%</small></div>`;
+    b.innerHTML=`<span class="n">${i+1}</span>${badgeHtml(r.g)}${mid}<span class="r">${fmt(r.bb)}</span>`;
+    b.onclick=()=>openReview(r,'Закрыть',true); h.appendChild(b); });
+  $('btnAgain').textContent = back ? 'Назад' : 'Ещё серия';
+  $('btnAgain').onclick = back ? ()=>{ show(CFG.mode==='duel'?'result':'aqua'); } : ()=>startSelected();
+  if (acc>=90 && !back) confetti();
+}
+
+// ======================= WIRING =======================
+$('btnStart').onclick=startSelected;
+$('btnMenu').onclick=()=>{ show('start'); renderStart(); };
+$('btnTheme').onclick=()=>{ CFG.theme = CFG.theme==='dark'?'light':'dark'; saveCfg(); applyTheme(); };
+$('btnAccept').onclick=()=>{ const d=decodeDuel($('duelCode').value); if (!d){ $('duelErr').textContent='Код не распознан. Проверь 8 символов, например K3F9-A2X7.'; return; } $('duelErr').textContent=''; runDuel(d); };
+$('duelCode').oninput=()=>{ $('duelErr').textContent=''; };
+$('btnHome').onclick=()=>{ if (state.busy) return; const p=state.pending, s=state.sheetResolve; state.pending=null; state.sheetResolve=null; $('sheet').classList.remove('on'); $('sheetBg').classList.remove('on'); unseed(); state.topText=null; state.running=false; RUN=null; show('start'); renderStart(); if (p) p('__abort'); if (s) s('__abort'); };
+$('btnNext').onclick=()=>closeSheet();
+$('sheetBg').onclick=()=>{ if (!state.sheetResolve || !state.running) closeSheet(); };
+$('btnMute').innerHTML=MUTE_SVG(SFX.muted);
+$('btnMute').onclick=()=>{ $('btnMute').innerHTML=MUTE_SVG(SFX.toggle()); };
+$('btnCopy').onclick=async()=>{ try{ await navigator.clipboard.writeText(state.share); toast('Скопировано'); }catch(e){ toast('Не удалось скопировать'); } };
+if (!['short','full','aqua','duel'].includes(CFG.mode)) CFG.mode='short';
+if (!CFG.theme) CFG.theme='light';
+renderStart();
+
+</script>
+<script>
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+// keep the status bar colour in step with the in-game theme
+(function(){ const set=()=>{ const dark=document.documentElement.dataset.theme==='dark'; document.querySelectorAll('meta[name="theme-color"]').forEach(m=>m.setAttribute('content', dark?'#1D1A23':'#F2EFF5')); };
+  new MutationObserver(set).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']}); set(); })();
+</script>
+</body>
+</html>
