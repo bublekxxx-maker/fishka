@@ -1670,14 +1670,14 @@ async function runDuel(challenge){
   if (challenge){
     const me=acc, him=challenge.acc, mood = me>him?'happy':me<him?'sad':'think';
     const verdict = me>him ? 'Победа! Ты решил точнее.' : me<him ? 'Поражение. Друг решил точнее.' : 'Ничья — точность одинаковая.';
-    state.share=`Дуэль в «Пуш или Фолд»: я — ${me}%, ты — ${him}%. ${me>him?'Я выиграл 😎':me<him?'Ты выиграл, реванш?':'Ничья!'} Код дуэли: ${code}`;
+    state.share=`Дуэль в «Фишке»: я — ${me}%, ты — ${him}%. ${me>him?'Я выиграл 😎':me<him?'Ты выиграл, реванш?':'Ничья!'} Код дуэли: ${code}`;
     html=`<div class="card2" style="text-align:center"><div class="lbl">Дуэль · одинаковые 10 раздач</div>
       <div style="display:flex;justify-content:center;margin:10px 0">${mascotSvg(mood,96)}</div>
       <div class="vs"><div><div class="who">ТЫ</div><div class="n">${me}%</div></div><div class="x">vs</div><div><div class="who">ДРУГ</div><div class="n">${him}%</div></div></div>
       <div class="vt" style="font-size:20px;font-weight:800;margin-top:12px">${verdict}</div>
       <div class="verdict2" style="margin-top:6px">Сравнивается точность решений, а не выигранные фишки — удача тут не помогает.</div></div>`;
   } else {
-    state.share=`Вызываю тебя на дуэль в «Пуш или Фолд»! Открой игру → «Дуэль» → «Принять вызов» и введи код ${code}. Мой результат — ${acc}%. Сможешь лучше?`;
+    state.share=`Вызываю тебя на дуэль в «Фишке»! Открой игру → «Дуэль» → «Принять вызов» и введи код ${code}. Мой результат — ${acc}%. Сможешь лучше?`;
     html=`<div class="card2" style="text-align:center"><div class="lbl">Дуэль · твой результат</div>
       <div style="display:flex;justify-content:center;margin:10px 0">${mascotSvg(acc>=80?'happy':acc>=55?'think':'sad',96)}</div>
       <div class="bignum">${acc}%</div>
@@ -1815,7 +1815,7 @@ function aquaEnd(win, quit){
   const A=$('aqua');
   const title = win ? 'Аквариум пройден! Ты — Мегалодон' : quit ? 'Ты всплыл' : 'Тебя съели';
   const sub = win ? `Все 9 столов позади, в стеке ${num(stack)} BB.` : `Пройдено столов: ${reached} из 9 · глубина «${DEPTHS[Math.min(2,Math.floor(reached/3))]}».`;
-  state.share=`Аквариум в «Пуш или Фолд»: ${win?'прошёл все 9 столов':'дошёл до стола '+(reached+1)+' из 9'}, точность ${acc}%. Сможешь глубже?`;
+  state.share=`Аквариум в «Фишке»: ${win?'прошёл все 9 столов':'дошёл до стола '+(reached+1)+' из 9'}, точность ${acc}%. Сможешь глубже?`;
   A.innerHTML=`<div class="card2" style="text-align:center"><div style="display:flex;justify-content:center">${mascotSvg(win?'happy':'sad',110)}</div>
     <div style="font-size:24px;font-weight:800;margin-top:6px">${title}</div><div class="verdict2">${sub}${rec?' Новый рекорд!':''}</div>
     <div class="stat3" style="margin-top:14px"><div><b>${reached}/9</b><span>столов</span></div><div><b>${acc}%</b><span>точность</span></div><div><b>${state.results.length}</b><span>раздач</span></div></div></div>
@@ -1905,7 +1905,7 @@ function showSummary(back){
   const v = acc>=95?'Мегалодон. Студент Паша нервно пересчитывает таблицы.' : acc>=85?'Акула. Артём одобрительно кивает.' : acc>=70?'Щука. Неплохо, но Дядя Слава уже потирает руки.' : 'Карась. Бабушка Зина предлагает покушать и попробовать ещё раз.';
   $('sVerdict').textContent=v;
   $('sBB').textContent=`По фишкам: ${fmt(bb)} BB — но считается точность, а не карты.`;
-  if (!back) state.share=`«Пуш или Фолд»: точность ${acc}% — ${v.split('.')[0]}. Сможешь лучше?`;
+  if (!back) state.share=`«Фишка»: точность ${acc}% — ${v.split('.')[0]}. Сможешь лучше?`;
   const h=$('sHist'); h.innerHTML='';
   R.forEach((r,i)=>{ const b=document.createElement('button'); b.className='hitem'; let mid;
     if (r.mode==='short'){ const sp=r.spot; mid=`<div class="mid">${CNAME[r.cls]} · ${sp.S} BB · ${sp.pos}<small>${sp.type==='open'?'ты первый':'против пуша: '+sp.bot.short}${sp.ante?'':' · без анте'} · ${r.action==='go'?(sp.type==='open'?'олл-ин':'колл'):'фолд'}</small></div>`; }
