@@ -82,8 +82,8 @@ button,input{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .rail{position:relative;flex:1;min-height:300px;max-height:470px;margin:6px 4px 0}
 .felt{position:absolute;inset:0;border-radius:44% / 30%;background:var(--felt);box-shadow:0 0 0 8px var(--soft),0 0 0 9px var(--line)}
 .ring{position:absolute;inset:0;pointer-events:none}
-.plaque{position:absolute;transform:translate(-50%,-50%);font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--surf);color:var(--mute);white-space:nowrap;border:1px solid var(--line);z-index:3}
-.plaque.out{opacity:.85}
+.plaque{position:absolute;transform:translate(-50%,-50%);font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--surf);color:var(--mute);white-space:nowrap;border:1px solid var(--line);z-index:3}
+.plaque.out{opacity:.6;background:transparent;border-color:transparent}
 .plaque.live{color:var(--ink)}
 .plaque.call{background:var(--accent);color:var(--onAccent);border-color:var(--accent)}
 .dealer{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:var(--surf);border:1px solid var(--line);color:var(--ink);font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;z-index:3;transition:left .3s,top .3s}
@@ -131,7 +131,22 @@ button,input{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .hud .pos{font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;background:var(--surf);border:1px solid var(--line)}
 .hud .hn{font-size:17px;font-weight:800}
 .hud .hn small{font-size:12px;font-weight:500;color:var(--mute);margin-left:6px}
-.hud .eq{margin-left:auto;width:132px;font-size:12px;color:var(--mute)}
+.hud .eq{display:none}
+.dstrip{margin:6px 2px 0;padding:9px 12px 9px;border-radius:14px;background:var(--surf);border:1px solid var(--line);visibility:hidden}
+.dstrip.on{visibility:visible}
+.dtop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;color:var(--ink)}
+.dtop b{font-weight:800}
+.dval{font-size:12px;font-weight:700;color:var(--mute);white-space:nowrap}
+.dval b{color:var(--ink)}
+.dtrack{position:relative;height:8px;border-radius:4px;background:var(--soft);margin:7px 0 2px}
+.dzone{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--accent);opacity:.35}
+.dtick{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:var(--accent);border-radius:1px}
+.dmark{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--bad);border:2px solid var(--surf);box-shadow:0 1px 3px rgba(0,0,0,.25);opacity:0;transition:left .3s,opacity .2s}
+.dmark.in{background:var(--accent)}
+.dmark.on{opacity:1}
+.dnote{font-size:11.5px;color:var(--mute);margin-top:5px;line-height:1.3}
+.plaque b.d{display:inline-flex;width:15px;height:15px;border-radius:50%;background:var(--ink);color:var(--surf);font-size:9px;align-items:center;justify-content:center;margin-left:4px;vertical-align:-2px}
+.guide h3{font-size:17px;margin:14px 0 6px}.guide p,.guide li{font-size:14px;line-height:1.45;color:var(--ink)}.guide ul{padding-left:18px;margin:4px 0}.guide .k{background:var(--soft);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
 .hud .eq .row1{display:flex;justify-content:space-between}
 .hud .eq b{color:var(--ink);font-weight:800}
 .wrbar{height:4px;border-radius:2px;background:var(--soft);margin-top:4px;overflow:hidden}
@@ -310,7 +325,7 @@ button,input{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .dossier.on{display:flex;animation:fadein .2s}
 .dcard{width:100%;max-width:380px;background:var(--sheet);border-radius:24px;padding:20px;color:var(--ink);max-height:85dvh;overflow-y:auto}
 .ava{cursor:pointer}
-@media (max-height:720px){.rail{min-height:250px}.ava{width:46px;height:46px;font-size:15px}.act{height:50px}.mearea{margin-top:-40px}}
+@media (max-height:720px){.bet.v{top:29%}.center{top:63%}.dstrip{padding:7px 11px}.rail{min-height:250px}.ava{width:46px;height:46px;font-size:15px}.act{height:50px}.mearea{margin-top:-40px}}
 </style>
 </head>
 <body>
@@ -336,6 +351,7 @@ button,input{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
     </div>
     <div class="levdesc" id="aquaInfo" style="display:none"></div>
     <button class="big-btn" id="btnStart">Играть</button>
+    <button class="themebtn" id="btnGuide">Как принимать решения</button>
     <button class="themebtn" id="btnTheme"></button>
   </section>
 
@@ -381,6 +397,8 @@ button,input{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
       <span class="pos" id="hPos">BTN</span>
       <span class="hn" id="hName"></span>
       <div class="eq"><div class="row1"><span id="hEqL">шансы</span><b id="hEq">—</b></div><div class="wrbar"><i id="hEqBar"></i></div></div>
+    </div>
+    <div class="dstrip" id="dstrip"><div class="dtop"><span id="dLab"></span><span class="dval" id="dVal"></span></div><div class="dtrack"><i class="dzone" id="dZone"></i><i class="dtick" id="dTick"></i><i class="dmark" id="dMark"></i></div><div class="dnote" id="dNote"></div>
     </div>
     <div class="actions" id="actions"></div>
     <div class="sizes" id="sizes"></div>
@@ -726,13 +744,17 @@ function renderRing(heroIdx, oppIdx, info){
   at[heroIdx]=90; at[oppIdx]=270;
   for (let i=1;i<=nL;i++) at[(heroIdx+i)%6]=125+95*i/(nL+1);
   for (let j=1;j<=nR;j++) at[(oppIdx+j)%6]=320+95*j/(nR+1);
-  for (let p=0;p<6;p++){ if (p===heroIdx||p===oppIdx) continue; const t=at[p]*Math.PI/180, x=clamp(50+47*Math.cos(t),13,87), y=50+46*Math.sin(t);
-    const it=info[p]||{label:'пас',cls:'out'}; const el=document.createElement('div'); el.className='plaque '+(it.cls||'');
-    el.style.left=x+'%'; el.style.top=y+'%'; el.textContent=`${POS[p]} · ${it.label}`; ring.appendChild(el); }
-  const d=$('dealer'), btn=3; let x,y;
-  if (btn===heroIdx){ x=30; y=84; } else if (btn===oppIdx){ x=70; y=30; }
-  else { const t=at[btn]*Math.PI/180; x=50+30*Math.cos(t); y=50+30*Math.sin(t)+6; }
-  d.style.left=x+'%'; d.style.top=y+'%';
+  // other seats sit in two narrow columns on the table edge, clear of the board and the cards
+  const btn=3, Y=n=>n===1?[52]:n===2?[40,66]:n===3?[34,52,70]:[30,44,58,72];
+  const place=(p,x,y)=>{ const it=info[p]||{label:'',cls:'out'}; const el=document.createElement('div'); el.className='plaque '+(it.cls||'');
+    if (x<50){ el.style.left='3%'; el.style.transform='translate(0,-50%)'; } else { el.style.left='97%'; el.style.transform='translate(-100%,-50%)'; } el.style.top=y+'%'; el.innerHTML=`${POS[p]}${it.label?' '+it.label:''}${p===btn?'<b class="d">D</b>':''}`; ring.appendChild(el); };
+  // left column: seats after hero going clockwise (bottom → top)
+  { const ys=Y(nL).slice().reverse(); for (let i=1;i<=nL;i++) place((heroIdx+i)%6, 11, ys[i-1]); }
+  { const ys=Y(nR); for (let j=1;j<=nR;j++) place((oppIdx+j)%6, 89, ys[j-1]); }
+  const d=$('dealer');
+  if (btn===heroIdx){ d.style.display=''; d.style.left='24%'; d.style.top='86%'; }
+  else if (btn===oppIdx){ d.style.display=''; d.style.left='64%'; d.style.top='13%'; }
+  else d.style.display='none';
 }
 
 // --- sea-creature grade icons ---
@@ -779,6 +801,35 @@ function renderActions(main, sizes, hintFn, moreLabel){
   }
 }
 function lockActions(){ document.querySelectorAll('#actions .act, #sizes .act').forEach(b=>b.disabled=true); $('hintbox').classList.remove('on'); }
+
+// --- decision strip: the one comparison that matters for this decision ---
+const READ = {nit:'его ставки — это сила, а на твои он часто сбрасывает', rock:'сам ставит редко — если ставит, у него что-то есть', tag:'давит ставками, но мусор не играет', lag:'ставит часто — его ставка ещё не значит силу', fish:'не блефуй, ставь за value — он заплатит', maniac:'ставит всё подряд — ловить его коллом выгодно'};
+function readLine(b){
+  if (!dossierOpen(b)) return `Стиль ${b.gen||b.short} пока неизвестен — смотри, как он играет`;
+  if (b.arch) return `${ARCH[b.arch].t}: ${READ[b.arch]}`;
+  return `${b.short}: ${b.tag}`;
+}
+// o: {lab, zone:[a,b], tick, mark, good, markTxt, note, show}
+function setStrip(o){
+  const s=$('dstrip'); state.strip=o||null;
+  if (!o){ s.classList.remove('on'); return; }
+  $('dLab').innerHTML=o.lab; $('dNote').textContent=o.note||''; $('dNote').style.display=o.note?'':'none';
+  const z=$('dZone'); z.style.left=(o.zone[0]*100)+'%'; z.style.width=((o.zone[1]-o.zone[0])*100)+'%';
+  $('dTick').style.left=(o.tick*100)+'%';
+  stripMark(o.show); s.classList.add('on');
+}
+function stripMark(show){
+  const o=state.strip; if (!o) return; const m=$('dMark'), v=$('dVal');
+  if (show && o.mark!=null){ m.style.left=(clamp(o.mark,.01,.99)*100)+'%'; m.classList.add('on'); m.classList.toggle('in', !!o.good); v.innerHTML=o.markTxt||''; }
+  else { m.classList.remove('on'); v.innerHTML=o.mark!=null?'шансы скрыты':''; }
+}
+// rank every hand by how good a shove it is in THIS spot: cut = share of hands that shove at a profit, rank = where yours sits
+function pushRank(evs, cls){
+  const d=c=>evs[c].go-evs[c].fold; let cut=0, rank=0;
+  for (let c=0;c<169;c++){ if (d(c)>0) cut+=COMBOS[c]; if (d(c)>=d(cls)) rank+=COMBOS[c]; }
+  return {cut:cut/1326, rank:rank/1326};
+}
+const OPEN_STD = {UTG:.15, MP:.19, CO:.27, BTN:.43, SB:.38};
 
 // ======================= OPPONENT GENERATOR =======================
 // Play style = two sliders (looseness L, aggression A) + 1–2 habits + noise.
@@ -994,12 +1045,12 @@ function gradeShort(chosen, ev, hint, cls, spot){
 function renderSeatsShort(spot, mark){
   const info={};
   if (spot.type==='open'){
-    for (let i=0;i<spot.heroIdx;i++) info[i]={label:'пас', cls:'out'};
+    for (let i=0;i<spot.heroIdx;i++) info[i]={label:'', cls:'out'};
     for (const v of spot.villains){ if (v.isBB) continue; const i=POS.indexOf(v.pos);
-      info[i] = mark===v.pos ? {label:`${v.who.name} · колл`, cls:'call'} : mark ? {label:'пас', cls:'out'} : {label:`${v.who.name} ${v.stack}`, cls:'live'}; }
+      info[i] = mark===v.pos ? {label:'колл', cls:'call'} : mark ? {label:'', cls:'out'} : {label:`${v.stack}`, cls:'live'}; }
     renderRing(spot.heroIdx, 5, info);
   } else {
-    for (let i=0;i<6;i++) info[i]={label:'пас', cls:'out'};
+    for (let i=0;i<6;i++) info[i]={label:'', cls:'out'};
     renderRing(spot.heroIdx, spot.vIdx, info);
   }
 }
@@ -1011,7 +1062,7 @@ function hintShort(spot, ev){
 }
 
 async function shortHand(){
-  hideBanner(); logMsg('');
+  hideBanner(); logMsg(''); setStrip(null);
   const ante=Math.random()<.75, spot=Math.random()<.6 ? makeOpenSpot(ante) : makeCallSpot(ante);
   const hc=pickHand(spot), cls=classOf(hc[0],hc[1]), ev=spot.evs[cls], lv=LV[CFG.level];
   state.hintUsed=false;
@@ -1026,6 +1077,12 @@ async function shortHand(){
   $('hName').innerHTML=`${CNAME[cls]}<small>топ ${Math.max(1,Math.round(PCT[cls]*100))}%</small>`;
   const eqLabel = spot.type==='open' ? 'шансы при колле' : 'шансы vs пуш';
   setHeroEq(eqLabel, null); $('hintbox').classList.remove('on');
+  const topTxt=p=>`топ ${Math.max(1,Math.round(p*100))}%`, close=Math.abs(ev.go-ev.fold)<.3;
+  if (spot.type==='open'){ const {cut,rank}=pushRank(spot.evs,cls), n=5-spot.heroIdx;
+    setStrip({lab:`Пуш выгоден: <b>топ ${Math.round(cut*100)}%</b> рук`, zone:[0,cut], tick:cut, mark:Math.min(rank,ev.go>ev.fold?cut:1), good:ev.go>ev.fold, markTxt:`ты: <b>${topTxt(rank)}</b>`,
+      note:`Стек ${num(spot.S)} BB · за тобой ${n} ${n===1?'игрок':'игрока'} · ${ante?'анте есть':'без анте'}${close?' · на грани':''}`}); }
+  else setStrip({lab:`Колл окупается от <b>${pct(ev.need)}</b> шансов`, zone:[ev.need,1], tick:ev.need, mark:ev.eq, good:ev.go>ev.fold, markTxt:`у тебя <b>${pct(ev.eq)}</b>`,
+      note:`Колл ${num(ev.cost)} BB, банк станет ${num(ev.pot)} BB${close?' · на грани':''}`});
   const goHtml = spot.type==='open' ? 'Олл-ин' : `Колл<small>${num(ev.cost)} BB</small>`;
   const btns=[{html:'Фолд', v:'fold', cls:'fold'},{html:goHtml, v:'go', cls:'go'}];
   renderActions(btns, null, ()=>hintShort(spot,ev)); lockActions(); setBusy(true);
@@ -1034,7 +1091,7 @@ async function shortHand(){
   await sleep(250);
   for (const el of $('hCards').children){ el.classList.remove('down'); SFX.flip(); await sleep(110); }
   if (spot.type==='call'){ setBet('v', spot.V, 'олл-ин'); say(fillT(pick(b.shoveTalk),spot.V), 2200); SFX.chips(); }
-  setHeroEq(eqLabel, ev.eq, lv.showEq);
+  setHeroEq(eqLabel, ev.eq, lv.showEq); stripMark(lv.showEq);
   renderActions(btns, null, ()=>hintShort(spot,ev));
   setBusy(false);
   const idleT=setTimeout(()=>{ if(state.pending && spot.type==='open') say(pick(b.idle)); }, 4000);
@@ -1042,7 +1099,7 @@ async function shortHand(){
   if (action==='__abort') throw ABORT;
   setBusy(true); lockActions();
   const gr=gradeShort(action, ev, state.hintUsed, cls, spot);
-  miniBadge(gr.g); setHeroEq(eqLabel, ev.eq, true);
+  miniBadge(gr.g); setHeroEq(eqLabel, ev.eq, true); stripMark(true);
   const result = spot.type==='open' ? await resolveOpen(spot, hc, action) : await resolveCall(spot, hc, action);
   setBusy(false);
   return {mode:'short', spot, hc, cls, ev, action, hint:state.hintUsed, ...gr, result, bb:result.bb, label:CNAME[cls]};
@@ -1280,7 +1337,7 @@ function fullRender(){
   setBet('h', H.hi, H.hs<=0.04&&H.hi>0?'олл-ин':''); setBet('v', H.bi, H.bs<=0.04&&H.bi>0?'олл-ин':'');
   setPot(H.pot-H.hi-H.bi);
 }
-function renderSeatsFull(){ const info={}; for (let i=0;i<6;i++) info[i]={label:'пас',cls:'out'}; renderRing(H.heroIdx, H.botIdx, info); }
+function renderSeatsFull(){ const info={}; for (let i=0;i<6;i++) info[i]={label:'',cls:'out'}; renderRing(H.heroIdx, H.botIdx, info); }
 function put(who, amt){ amt=r1(Math.min(amt, who==='h'?H.hs:H.bs)); if (who==='h'){ H.hs=r1(H.hs-amt); H.hi=r1(H.hi+amt); } else { H.bs=r1(H.bs-amt); H.bi=r1(H.bi+amt); } H.pot=r1(H.pot+amt); return amt; }
 function refundExcess(){ // if one player bet more than the other could match after an all-in call
   if (H.hi>H.bi && H.bs===0){ const d=r1(H.hi-H.bi); H.hi=H.bi; H.hs=r1(H.hs+d); H.pot=r1(H.pot-d); }
@@ -1293,6 +1350,7 @@ function normW(){ const u=validMask(); let s=0; const w=new Float64Array(1326);
   for (let i=0;i<1326;i++) w[i]/=s; return w; }
 
 async function fullHand(opts={}){
+  setStrip(null);
   hideBanner(); logMsg('');
   const bot=opts.bot||randomOpponent(); let heroIdx, botIdx;
   if (Math.random()<.65){ botIdx=rand(5); heroIdx=botIdx+1+rand(5-botIdx); } else { heroIdx=rand(5); botIdx=heroIdx+1+rand(5-heroIdx); }
@@ -1330,7 +1388,7 @@ async function fullHand(opts={}){
   let outcome=null;
   for (H.street=0; H.street<4; H.street++){
     if (H.street>0){
-      H.hi=0; H.bi=0; H.raises=0; fullRender();
+      H.hi=0; H.bi=0; H.raises=0; fullRender(); setStrip(null);
       const n = H.street===1?3:1; $('street').textContent=STREETS[H.street];
       for (let k=0;k<n;k++){ const c=H.deck.pop(); placeBoardCard(H.board.length,c); H.board.push(c); SFX.deal(); await sleep(170); }
       await sleep(300);
@@ -1519,7 +1577,18 @@ function hintFull(opts, eqR){
 
 async function heroAct(){
   const opts=heroOptions(); const {eqR, w}=evalOptions(opts); const lv=LV[CFG.level];
-  setHeroEq('шансы', eqR, lv.showEq || !!(H.opts&&H.opts.sonar));
+  const seeEq = lv.showEq || !!(H.opts&&H.opts.sonar);
+  setHeroEq('шансы', eqR, seeEq);
+  { const toCall=r1(H.bi-H.hi), note=readLine(H.bot), cls=classOf(H.hc[0],H.hc[1]);
+    if (toCall>0 && !(H.street===0 && H.raises===0)){ const c=Math.min(toCall,H.hs), need=c/(H.pot+c), best=opts.reduce((a,o)=>o.ev>a.ev?o:a,opts[0]);
+      const good=best.kind!=='fold', ahead=eqR>=need;
+      const extra = good&&!ahead ? 'Шансов меньше нужного, но на следующих улицах можно добрать — колл всё равно выгоден. '
+                  : !good&&ahead ? 'Шансов хватает впритык, но без позиции и с улицами впереди часть из них не реализуется. ' : '';
+      setStrip({lab:`Колл окупается от <b>${pct(need)}</b> шансов`, zone:[need,1], tick:need, mark:eqR, good, markTxt:`у тебя <b>${pct(eqR)}</b>`, note:(seeEq?extra:'')+note, show:seeEq}); }
+    else if (H.street===0){ const std=OPEN_STD[H.heroPos]||.3, t=p=>`топ ${Math.max(1,Math.round(p*100))}%`;
+      setStrip({lab:`Открытие с ${H.heroPos}: обычно <b>${t(std)}</b> рук`, zone:[0,std], tick:std, mark:PCT[cls], good:PCT[cls]<=std, markTxt:`ты: <b>${t(PCT[cls])}</b>`, note, show:seeEq}); }
+    else setStrip({lab:`Ставка за value — от <b>60%</b> шансов`, zone:[.6,1], tick:.6, mark:eqR, good:eqR>=.6, markTxt:`у тебя <b>${pct(eqR)}</b>`, note, show:seeEq});
+  }
   const main=[], sizes=[];
   opts.forEach((o,i)=>{
     if (o.kind==='fold') main.push({html:'Фолд', v:i, cls:'fold'});
@@ -1537,7 +1606,7 @@ async function heroAct(){
   const gr=gradeFull(opts, ci, hint, eqR);
   const o=opts[ci], toCall=r1(H.bi-H.hi);
   H.decisions.push({street:H.street, opts:opts.map(x=>({label:x.label, kind:x.kind, ev:x.ev, pf:x.pf})), ci, ...gr, eqR, P:H.pot, toCall:Math.min(toCall,H.hs), grid:classGrid(w), share:rangeShare(w), hint, board:H.board.slice()});
-  miniBadge(gr.g); if (gr.g==='brilliant'||gr.g==='blunder') gradeEffects(gr.g); else SFX[gr.g]();
+  miniBadge(gr.g); stripMark(true); if (gr.g==='brilliant'||gr.g==='blunder') gradeEffects(gr.g); else SFX[gr.g]();
   // apply
   let text;
   if (o.kind==='fold'){ text='Ты: пас'; $('hCards').querySelectorAll('.card').forEach(c=>c.classList.add('dim')); }
@@ -1920,6 +1989,23 @@ function showSummary(back){
 // ======================= WIRING =======================
 $('btnStart').onclick=startSelected;
 $('btnMenu').onclick=()=>{ show('start'); renderStart(); };
+const GUIDE_HTML = `<div class="guide"><div class="lbl">Инструкция</div><h2 style="margin:4px 0 2px;font-size:21px">Как принимать решения</h2>
+<p>В каждой раздаче решение сводится к одному сравнению. Полоса над кнопками показывает именно его.</p>
+<h3>Ты первый и можешь пойти олл-ин</h3>
+<div class="k">Сила руки <b>против</b> порога пуша</div>
+<p>Порог — это насколько широко здесь выгодно пушить. Он шире, когда:</p>
+<ul><li><b>стек короче</b> — рискуешь меньше, а забрать блайнды и анте выгоднее;</li><li><b>за тобой меньше игроков</b> — меньше шансов нарваться на сильную руку;</li><li><b>есть анте</b> — в банке больше денег, которые можно забрать сразу.</li></ul>
+<p>Рука внутри зоны — пуш. Снаружи — фолд. У края — решает мелочь, ошибка там стоит дёшево.</p>
+<h3>Против олл-ина или ставки</h3>
+<div class="k">Твои шансы <b>против</b> цены колла</div>
+<p>Цена колла — какая доля итогового банка твоя: колл стоит 5, банк после колла будет 15 → нужно 5/15 = 33% шансов. Если шансов больше — колл в плюс на длинной дистанции, даже если эту раздачу проиграешь.</p>
+<p>Шансы считаются не против конкретных карт, а против всех рук, с которыми соперник так играет. Тайтовый игрок пушит узко — нужна рука посильнее. Маньяк пушит всё — коллировать можно шире.</p>
+<h3>Ставить или чекать</h3>
+<ul><li>Сильная рука (от ~60% шансов) — ставь: хуже тебя заплатят.</li><li>Средняя — чаще чек: ставкой ты выгонишь худшие руки, а лучшие заплатят.</li><li>Слабая — блеф работает против тех, кто сбрасывает. Против колл-станции не блефуй.</li></ul>
+<h3>Что смотреть на столе</h3>
+<ul><li><b>Стек в BB</b> — сколько ты рискуешь.</li><li><b>Позиция</b> — сколько игроков ещё могут ответить.</li><li><b>Банк и ставка</b> — цена колла.</li><li><b>Соперник</b> — тапни на аватар, там досье.</li></ul>
+<p style="color:var(--mute);font-size:13px">На уровне «Профи» твои шансы скрыты до решения — считать придётся самому. Порог виден всегда.</p></div>`;
+$('btnGuide').onclick=()=>{ $('dosBody').innerHTML=GUIDE_HTML; $('dossier').classList.add('on'); };
 $('btnTheme').onclick=()=>{ CFG.theme = CFG.theme==='dark'?'light':'dark'; saveCfg(); applyTheme(); };
 $('btnAccept').onclick=()=>{ const d=decodeDuel($('duelCode').value); if (!d){ $('duelErr').textContent='Код не распознан. Проверь 8 символов, например K3F9-A2X7.'; return; } $('duelErr').textContent=''; runDuel(d); };
 $('duelCode').oninput=()=>{ $('duelErr').textContent=''; };
